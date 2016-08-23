@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<groupId>org.mule.templates</groupId>
+		<artifactId>templates-tooling-healthcare-parent-pom</artifactId>
+		<version>1.3.0</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>template-healthcare-sfhc2fhir-system-api</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>mule</packaging>
+	<name>template-healthcare-sfhc2fhir-system-api Mule Anypoint Template Project</name>
+	
+	<properties>
+		<mule.version>3.8.1</mule.version>
+	</properties>
+
+	<scm>
+		<connection>scm:git:https://github.com/mulesoft/template-healthcare-sfhc2fhir-system-api.git</connection>
+		<developerConnection>scm:git:https://github.com/mulesoft/template-healthcare-sfhc2fhir-system-api.git</developerConnection>
+		<url>http://github.com/mulesoft/template-healthcare-sfhc2fhir-system-api</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.mule.tools</groupId>
+				<artifactId>maven-mule-plugin</artifactId>
+				<configuration>
+					<copyToAppsDirectory>true</copyToAppsDirectory>
+					<inclusions>
+						<inclusion>
+							<groupId>org.mule.modules</groupId>
+							<artifactId>mule-module-apikit</artifactId>
+						</inclusion>
+					</inclusions>
+				</configuration>
+			</plugin>
+		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/api</directory>
+			</resource>
+			<resource>
+				<directory>src/main/app</directory>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>mule-ee-releases</id>
+			<name>MuleSoft Releases EE Repository</name>
+			<url>https://repository.mulesoft.org/nexus/content/repositories/releases-ee/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+</project>
