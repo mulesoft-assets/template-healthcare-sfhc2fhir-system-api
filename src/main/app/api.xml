@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:context="http://www.springframework.org/schema/context"
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
 	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
@@ -279,10 +281,135 @@ payload
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
     <flow name="post:/MedicationOrder:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Prepare create of the EhrMedicationPrescriptions in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	"HealthCloudGA__DateWritten__c": now as :date,
+	"HealthCloudGA__DispenseMedicationCodeSystem__c": payload.medicationCodeableConcept.coding[1].system,
+	"HealthCloudGA__DispenseMedicationCode__c": payload.medicationCodeableConcept.coding[1].code,
+	"HealthCloudGA__DispenseMedicationName__c": payload.medicationCodeableConcept.coding[1].display,
+	"HealthCloudGA__DispenseQuantityUnit__c": payload.dosageInstruction[0].doseQuantity.unit,
+	"HealthCloudGA__DispenseQuantityValue__c": payload.dosageInstruction[0].doseQuantity.value,
+	"HealthCloudGA__MedicationCodeLabel__c": payload.medicationCodeableConcept.coding[1].display,
+	"HealthCloudGA__MedicationCodeSystem__c": payload.medicationCodeableConcept.coding[1].system,
+	"HealthCloudGA__MedicationCode__c": payload.medicationCodeableConcept.coding[1].code,
+	"HealthCloudGA__MedicationName__c": payload.medicationCodeableConcept.text,
+	"HealthCloudGA__PrescriberName__c": payload.prescriber.display,
+	"HealthCloudGA__StatusCode__c": payload.status,
+	"HealthCloudGA__ReasonCode__c": payload.reasonCodeableConcept.coding.display
+}]]></dw:set-payload>
+            <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Account__c, HealthCloudGA__Name__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
+        </enricher>
+
+        <dw:transform-message doc:name="Enhance EhrMedicationPrescription data">
+            <dw:input-payload doc:sample="sample_data\json.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+[
+	payload ++  {"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, "HealthCloudGA__Patient__c": flowVars.patient.Id}			
+]
+]]></dw:set-payload>
+        </dw:transform-message>
+
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrMedicationPrescription__c" doc:name="Create new EhrMedicationPrescriptions">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="New Medication Prescriptions were created succesfully, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+"Success": true]]></dw:set-payload>
+        </dw:transform-message>
+
+
     </flow>
     <flow name="post:/Observation:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Prepare create of the EhrObservations in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.code.coding map {
+//	"Account__c": flowVars.ehrPatient.Account__c,
+	"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
+	"HealthCloudGA__Comments__c": "EPIC Observations",
+	"HealthCloudGA__NameCode__c": $.code,
+	"HealthCloudGA__NameLabel__c": $.display,
+	"HealthCloudGA__NameSystem__c": $.system,
+//	"Patient__c": flowVars.ehrPatient.Id,
+	"HealthCloudGA__ReferenceRangeHighUnit__c": payload.referenceRange[0].high.unit,
+	"HealthCloudGA__ReferenceRangeHighValue__c": payload.referenceRange[0].high.value,
+	"HealthCloudGA__ReferenceRangeLowUnit__c": payload.referenceRange[0].low.unit,
+	"HealthCloudGA__ReferenceRangeLowValue__c": payload.referenceRange[0].low.value,
+	"HealthCloudGA__ValueCode__c": payload.valueQuantity.code,
+	"HealthCloudGA__ValueLabel__c": payload.valueQuantity.system,
+	"HealthCloudGA__ValueQuantityUnit__c": payload.valueQuantity.unit,
+	"HealthCloudGA__ValueQuantity__c": payload.valueQuantity.value
+}) when payload.component == null otherwise (
+	payload.component map {
+//		"Account__c": flowVars.ehrPatient.Account__c,
+		"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
+		"HealthCloudGA__Comments__c": "EPIC Observations",
+		"HealthCloudGA__NameCode__c": $.code.coding.code,
+		"HealthCloudGA__NameLabel__c": $.code.coding.display,
+		"HealthCloudGA__NameSystem__c": $.code.coding.system,
+//		"Patient__c": flowVars.ehrPatient.Id,
+		"HealthCloudGA__ReferenceRangeHighUnit__c": $.referenceRange[0].high.unit,
+		"HealthCloudGA__ReferenceRangeHighValue__c": $.referenceRange[0].high.value,
+		"HealthCloudGA__ReferenceRangeLowUnit__c": $.referenceRange[0].low.unit,
+		"HealthCloudGA__ReferenceRangeLowValue__c": $.referenceRange[0].low.value,
+		"HealthCloudGA__ValueCode__c": $.valueQuantity.code,
+		"HealthCloudGA__ValueLabel__c": $.valueQuantity.system,
+		"HealthCloudGA__ValueQuantityUnit__c": $.valueQuantity.unit,
+		"HealthCloudGA__ValueQuantity__c": $.valueQuantity.value
+}
+)]]></dw:set-payload>
+            <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.subject.reference splitBy "/")[-1]]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
+        </enricher>
+
+        <dw:transform-message doc:name="Enhance EhrObservations data">
+            <dw:input-variable doc:sample="string.dwl" variableName="inputJson"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map (
+	$ ++  
+	{
+		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
+		"HealthCloudGA__Patient__c": flowVars.patient.Id
+	}
+)
+
+
+]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrObservation__c" doc:name="Create new EhrObservations">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="New Observations were created succesfully, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+
+
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
     </flow>
     <flow name="post:/Patient:application/json:api-config">
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>

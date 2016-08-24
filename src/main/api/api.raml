@@ -572,7 +572,7 @@ types:
       encounter?: Reference
       /^reason(CodeableConcept|Reference)$/?: CodeableConcept | Reference
       note?: string
-      medication/^(CodeableConcept|String)$/: CodeableConcept | string
+      /^medication(CodeableConcept|String)$/: CodeableConcept | string
       dosageInstruction?:
         type: array
         items: 
