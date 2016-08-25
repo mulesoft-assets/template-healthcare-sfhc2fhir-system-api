@@ -12,7 +12,7 @@ http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/a
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
     <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
+    <apikit:config name="api-config" raml="healthcare-system-api.raml" consoleEnabled="false" doc:name="Router" />
     <context:property-placeholder location="common.properties, mule.${mule.env}.properties"/>
     <sfdc:config name="Salesforce__Basic_Authentication" username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.token}" doc:name="Salesforce: Basic Authentication"/>
     
@@ -24,33 +24,6 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
     <flow name="api-console">
         <http:listener config-ref="api-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
         <apikit:console config-ref="api-config" doc:name="APIkit Console"/>
-    </flow>
-    <flow name="put:/Condition:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Encounter:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Medication:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/MedicationOrder:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Observation:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Patient:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Medication/{id}:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Condition/{id}:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Observation/{id}:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
     <flow name="put:/Patient/{id}:application/json:api-config">
         <set-variable variableName="patientID" value="#[message.inboundProperties.'http.uri.params'.id]" doc:name="Set patientID"/>
@@ -97,189 +70,60 @@ payload
 ]]></dw:set-payload>
         </dw:transform-message>
     </flow>
-    <flow name="put:/MedicationOrder/{id}:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="put:/Encounter/{id}:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Condition:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Encounter:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Medication:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/MedicationOrder:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Observation:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Patient:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Medication/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Encounter/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Condition/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Observation/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/MedicationOrder/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/Patient/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="options:/:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/{id}/Condition:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/{id}/Condition:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/{id}/Observation:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/{id}/Observation:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get://_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation/{id}/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition/_history:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition/_search:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/metadata-api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder/{id}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Patient/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Encounter/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Medication/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/MedicationOrder/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Condition/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/Observation/{id}/_history/{vid}:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
+
     <flow name="post:/Condition:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Prepare create of the EhrConditions in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.code.coding map {
+//	"Account__c": flowVars.ehrPatient.Account__c,
+	"HealthCloudGA__AbatementDetail255__c": "",
+	"HealthCloudGA__AbatementDetail__c": "",
+	"HealthCloudGA__CodeLabel__c": $.display,
+	"HealthCloudGA__CodeSystem__c": $.system,
+	"HealthCloudGA__Code__c": $.code,
+	"HealthCloudGA__Onset__c": payload.onsetDateTime,
+	"HealthCloudGA__StatusCode__c": "Active"
+//	"Patient__c": flowVars.ehrPatient.Id
+}) when (payload.code.coding != null) otherwise []]]></dw:set-payload>
+            <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
+        </enricher>
+        <dw:transform-message doc:name="Prepare create of the EhrConditions in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map (
+	$ ++  
+	{
+		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
+		"HealthCloudGA__Patient__c": flowVars.patient.Id
+	}
+)
+
+
+]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrCondition__c" doc:name="Create new EhrConditions">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="New Conditions were created succesfully, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+
+
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
     </flow>
-    <flow name="post:/Encounter:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Medication:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
+
     <flow name="post:/MedicationOrder:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the EhrMedicationPrescriptions in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
@@ -411,27 +255,7 @@ payload map (
 payload]]></dw:set-payload>
         </dw:transform-message>
     </flow>
-    <flow name="post:/Patient:application/json:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Patient/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Condition/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Observation/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/MedicationOrder/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Medication/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/Encounter/_search:application/x-www-form-urlencoded:api-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
+
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />

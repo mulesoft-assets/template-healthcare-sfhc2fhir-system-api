@@ -1,0 +1,40 @@
+  {
+    "resourceType": "Condition",
+    "patient": {
+      "reference": "patients/12345"
+    },
+    "text": {
+        "status": "good",
+        "div": "div"
+    },
+    "code": {
+      "coding": [
+        {
+          "code": "74400008",
+          "display": "Appendicitis",
+          "system": "http://snomed.info/sct"
+        },
+        {
+          "code": "541",
+          "display": "Appendicitis",
+          "system": "http://hl7.org/fhir/sid/icd-9-cm"
+        }
+      ],
+      "text": "Appendicitis"
+    },
+    "category": {
+      "coding": [
+        {
+          "code": "diagnosis",
+          "display": "Diagnosis",
+          "system": "http://hl7.org/fhir/condition-category"
+        },
+        {
+          "code": "439401001",
+          "display": "Diagnosis",
+          "system": "http://snomed.info/sct"
+        }
+      ]
+    },
+    "verificationStatus" : "good"
+  }

@@ -2,9 +2,7 @@
 title: FHIR API
 version: 1.0
 #baseUri: http://vadp-condition-v1.0.cloudhub.io/api
-baseUri: https://mocksvc.mulesoft.com/mocks/bc0dc070-252a-4b54-a02c-7f119c39bf6a/api
-
-
+baseUri: https://mocksvc.mulesoft.com/mocks/bc0dc070-252a-4b54-a02c-7f119c39bf6a/apg
 types: 
   
   base64Binary:
@@ -89,13 +87,10 @@ types:
       url: uri
       /^value(Integer|Decimal|DateTime|Date|Instant|String|Uri|Boolean|Code|Markdown|Base64Binary|Coding|CodeableConcept|Attachment|Identifier|Quantity|Range|Period|Ratio|HumanName|Address|ContactPoint|Timing|Signature|Reference)$/: integer | decimal | dateTime | date | instant | string | uri | boolean | code | markdown | base64Binary | Coding | CodeableConcept | Attachment | Identifier | Quantity | Range | Period | Ratio | HumanName | Address | ContactPoint | Timing | Signature | Reference
       
-
-  
   Element:
     properties:
       id?: id
       extension?: Extension[]
-      
       
   Duration:
     type: Quantity
@@ -130,7 +125,6 @@ types:
             type: code
             enum: [HS, WAKE, C, CM, CD, CV, AC, ACM, ACD, ACV, PC, PCM, PCD, PCV]    
       code?: CodeableConcept
-      
       
   Ratio:
     type: Element
@@ -286,13 +280,13 @@ types:
       hash?: base64Binary
       title?: string
       creation?: dateTime
-            
         
-        
-        
-        
-        
-        
+  Annotation:
+    type: Element      
+    properties:
+      /^author(Reference|String)$/?: Reference | string   
+      time?: dateTime
+      text?: string
         
   Resource:
     properties:
@@ -311,12 +305,11 @@ types:
       contained?: Resource[]
       extension?: Extension[]
       modifierExtension?: Extension[]
-
              
   Condition:
     type: DomainResource
     properties:
-      identifier?: Identifier
+      identifier?: Identifier[]
       patient: Reference
       encounter?: Reference
       asserter?: Reference
@@ -341,13 +334,143 @@ types:
       bodySite?: CodeableConcept
       notes?:
     additionalProperties: false
-          
+    
+  AllergyIntolerance:
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      onset?: dateTime
+      recordedDate?: dateTime
+      recorder?: Reference
+      patient: Reference
+      reporter?: Reference
+      substance: CodeableConcept
+      status?: 
+        type: code
+        enum: [active, unconfirmed, confirmed, inactive, resolved, refuted, entered-in-error]
+      criticality?:
+        type: code
+        enum: [CRITL, CRITH, CRITU]
+      type?:
+        type: code
+        enum: [allergy, intolerance]
+      category?:
+        type: code
+        enum: [food, medication, environment, other]
+      lastOccurence?: dateTime
+      note?: Annotation
+      reaction?: 
+        type: array
+        items: 
+          type: BackboneElement
+          properties:
+            substance?: CodeableConcept
+            certainty?: 
+              type: code
+              enum: [unlikely, likely, confirmed]
+            manifestation:
+              type: array
+              minItems: 1
+              items: 
+                type: CodeableConcept 
+            description?: string
+            onset?: dateTime
+            severity?: 
+              type: code
+              enum: [mild, moderate, severe]
+            exposureRoute?: CodeableConcept
+            note?: Annotation 
+  
+  Device:
+    description: An instance of a manufactured te that is used in the provision of healthcare
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      type: CodeableConcept
+      note?: Annotation[]
+      status?: 
+        type: code
+        enum: [available, not-available, enetered-in-error]
+      manufacturer?: string
+      model?: string
+      version?: string
+      manufactureDate?: dateTime
+      expiry?: dateTime
+      udi?: string
+      lotNumber?: string
+      owner?: Reference
+      location?: Reference
+      patient?: Reference
+      contact?: ContactPoint[]
+      url?: uri
+      
+  Appointment:
+    description: |
+      A booking of a healthcare event among patient(s), practitioner(s), related person(s) and/or device(s) for a specific date/time. This may result in one or more Encounter(s)
+      Only proposed or cancelled appointments can be missing start/end dates
+      Either start and end are specified, or neither
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      status:
+        type: code
+        enum: [proposed, pending, booked, arrived, fulfilled, cancelled, noshow]
+      type?: CodeableConcept
+      reason?: CodeableConcept
+      priority?: unsignedInt
+      description?: string
+      start?: instant
+      end?: instant
+      minutesDuration?: positiveInt
+      slot?: Reference[]
+      comment?: string
+      participant:
+        type: array
+        minItems: 1
+        items: 
+          type: BackboneElement
+          properties:   
+            type?: CodeableConcept
+            actor?: Reference
+            required?: 
+              type: code
+              enum: [required, optional, information-only]
+            status: 
+              type: code
+              enum: [accepted, declined, tentative, needs-action]
+  
+  Slot:
+    description: |
+      A slot of time on a schedule that may be available for booking appointments
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      type?: CodeableConcept
+      schedule: Reference
+      freeBusyType:
+        type: code
+        enum: [busy, free, busy-unavailable, busy-tentative]
+      start: instant
+      end: instant
+      overbooked?: boolean
+      comment?: string
+      
+  Schedule:
+    description: |
+      A container for slot(s) of time that may be available for booking appointments
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      type?: CodeableConcept[]
+      actor: Reference
+      planningHorizon?: Period
+      comment?: string    
         
   Patient:
     description: Information about an individual or animal receiving health care services
     type: DomainResource
     properties:
-      identifier?: Identifier   
+      identifier?: Identifier[]   
       active?: 
         type: boolean
         description: Whether this patient's record is in active use
@@ -406,7 +529,53 @@ types:
           type: 
             type: code
             enum: [replace, refer, seealso] 
-            
+
+  Practitioner:
+    description: 
+    type: DomainResource
+    properties:
+      identifier?: Identifier[]
+      active?: 
+        description: Whether this practitioner's record is in active use
+        type: boolean
+      name?: HumanName[]
+      telecom?: ContactPoint[]
+      address?: Address[]
+      gender?: gender      
+      birthDate?: date
+      photo?: Attachment[]
+      practitionerRole?: 
+        description: |
+          Roles/organizations the practitioner is associated with
+        type: array
+        items: 
+          type: BackboneElement
+          properties:
+            managingOrganization?: Reference
+            role?: CodeableConcept
+            specialty?: CodeableConcept[]
+            period?:
+              description: |
+                The period during which the practitioner is authorized to perform in these role(s)
+              type: Period
+            location?: Reference[]
+            healthcareService?: Reference[]
+      qualification?: 
+        description: |
+          Qualifications obtained by training and certification
+        type: array
+        items: 
+          type: BackboneElement
+          properties:
+            identifier?: Identifier[]
+            code: CodeableConcept
+            period?:
+              description: |
+                Period during which the qualification is valid
+              type: Period
+            issuer?: Reference
+      communication?: CodeableConcept[]  
+
   Medication:
     type: DomainResource
     properties:
@@ -441,11 +610,10 @@ types:
               item: Reference
               amount?: SimpleQuantity
               
-              
   Encounter:
     type: DomainResource
     properties:
-      identifier?: Identifier
+      identifier?: Identifier[]
       status: EncounterState
       statusHistory?:
         type: array
@@ -602,8 +770,6 @@ types:
           type?: CodeableConcept
           reason?: CodeableConcept
       priorPrescription?: Reference
-      
-      
       
   Bundle:
     type: Resource
@@ -859,6 +1025,7 @@ types:
 mediaType: [application/xml+fhir, application/json+fhir]
           
 traits:
+
   vread: 
     queryParameters:
       _format:
@@ -872,6 +1039,7 @@ traits:
         body:
           application/json:
             type: <<resourceName>>
+            
   read:
     queryParameters:
       _format:
@@ -889,6 +1057,7 @@ traits:
     responses:
       304:
         description: Not Modified
+        
   update:
     responses:
       200:
@@ -904,10 +1073,12 @@ traits:
       422:
         description: |
           Unprocessable Entity - the proposed resource violated applicable FHIR profiles or server business rules
+          
   delete:
     responses:
       204:
         description: Deleted
+        
   create:
     responses:
       201:
@@ -918,6 +1089,7 @@ traits:
           Last-Modified: datetime
           ETag:
             example: '1.0'
+            
   search:
     queryParameters:
       _content:
@@ -941,6 +1113,7 @@ traits:
         body:
           application/json:
             type: Bundle
+            
   conformance:
     responses:
       200:
@@ -956,7 +1129,13 @@ traits:
         body:
           application/json:
             type: Bundle
+            
+            
+            
+            
+            
 resourceTypes:
+
   fhirResourceType:
     post:
       is: [create]
@@ -990,6 +1169,7 @@ resourceTypes:
           description: Not found
         412:     
           description: Precondition Failed error indicating the client's criteria were not selective enough.
+          
   fhirResource:
     get:
       is: [read]
@@ -1005,9 +1185,11 @@ resourceTypes:
           type: <<resourcePathName>>
     delete:
       is: [delete]    
+      
   fhirCompartment:
     get:
       is: [search]
+      
   fhirSearch:
     post:
       body:
@@ -1036,18 +1218,14 @@ resourceTypes:
               type: Bundle
     get:
       is: [search]
+      
   fhirVersionedResource:
     get:
       is: [vread: { resourceName: <<resourceName>> }]
+      
   fhirHistory:
     get:
       is: [history]
-
-
-
-
-
-
 
 
 
@@ -1067,8 +1245,10 @@ resourceTypes:
       _format:
         required: false
         enum: [application/json, application/xml]
+        
   /_history:
     type: fhirHistory
+    
 /metadata:
   get:
     is: [conformance]
@@ -1082,6 +1262,111 @@ resourceTypes:
           application/json:
             type: Conformance 
 
+/AllergyIntolerance:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: AllergyIntolerance } }
+  /_search:
+    type: fhirSearch  
+
+/Appointment:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Appointment } }
+  /_search:
+    type: fhirSearch
+
+/Condition:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Condition } }
+  /_search:
+    type: fhirSearch 
+    
+/Device:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Device } }
+  /_search:
+    type: fhirSearch  
+    
+/Encounter:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Encounter } }
+  /_search:
+    type: fhirSearch
+
+/Medication:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Medication } }
+  /_search:
+    type: fhirSearch 
+
+/MedicationOrder:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: MedicationOrder } }
+  /_search:
+    type: fhirSearch 
+
+/Observation:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Observation } }
+  /_search:
+    type: fhirSearch 
+        
 /Patient:
   type: fhirResourceType
   /_history:
@@ -1096,50 +1381,16 @@ resourceTypes:
       type: fhirCompartment
     /Observation:
       type: fhirCompartment
-  /_search:
-    type: fhirSearch       
-/Encounter:
-  type: fhirResourceType
-  /_history:
-    type: fhirHistory
-  /{id}:
-    type: fhirResource
-    /_history:
-      type: fhirHistory
-      /{vid}:
-        type: { fhirVersionedResource: { resourceName: Encounter } }
-    /Condition:
+    /MedicationOrder:
       type: fhirCompartment
-    /Observation:
+    /Appointment:
+      type: fhirCompartment
+    /AllergyIntolerance:
       type: fhirCompartment
   /_search:
-    type: fhirSearch         
-/Observation:
-  type: fhirResourceType
-  /_history:
-    type: fhirHistory
-  /{id}:
-    type: fhirResource
-    /_history:
-      type: fhirHistory
-      /{vid}:
-        type: { fhirVersionedResource: { resourceName: Observation } }
-  /_search:
-    type: fhirSearch 
-/Condition:
-  type: fhirResourceType
-  /_history:
-    type: fhirHistory
-  /{id}:
-    type: fhirResource
+    type: fhirSearch   
     
-    /_history:
-      type: fhirHistory
-      /{vid}:
-        type: { fhirVersionedResource: { resourceName: Condition } }
-  /_search:
-    type: fhirSearch 
-/MedicationOrder:
+/Practitioner:
   type: fhirResourceType
   /_history:
     type: fhirHistory
@@ -1148,10 +1399,15 @@ resourceTypes:
     /_history:
       type: fhirHistory
       /{vid}:
-        type: { fhirVersionedResource: { resourceName: MedicationOrder } }
+        type: { fhirVersionedResource: { resourceName: Practitioner } }
+    /Schedule:
+      type: fhirCompartment
+    /Appointment:
+      type: fhirCompartment
   /_search:
-    type: fhirSearch 
-/Medication:
+    type: fhirSearch   
+
+/Schedule:
   type: fhirResourceType
   /_history:
     type: fhirHistory
@@ -1160,6 +1416,20 @@ resourceTypes:
     /_history:
       type: fhirHistory
       /{vid}:
-        type: { fhirVersionedResource: { resourceName: Medication } }
+        type: { fhirVersionedResource: { resourceName: Schedule } }
+  /_search:
+    type: fhirSearch
+    
+/Slot:
+  type: fhirResourceType
+  /_history:
+    type: fhirHistory
+  /{id}:
+    type: fhirResource
+    /_history:
+      type: fhirHistory
+      /{vid}:
+        type: { fhirVersionedResource: { resourceName: Slot } }
   /_search:
     type: fhirSearch 
+            
