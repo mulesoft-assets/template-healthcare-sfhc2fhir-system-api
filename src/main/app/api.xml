@@ -241,6 +241,73 @@ payload map (
 payload]]></dw:set-payload>
         </dw:transform-message>
 	</flow>
+	
+	<flow name="put:/AllergyIntolerance/{id}:application/json:api-config">
+        <set-variable variableName="allergyIntoleranceID" value="#[message.inboundProperties.'http.uri.params'.id]" doc:name="Set allergyIntoleranceID"/>
+	    <dw:transform-message doc:name="Prepare create of the EhrAllergyIntolerance in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+		"Id" : flowVars.allergyIntoleranceID,
+		"HealthCloudGA__RecorderName__c": payload.reporter.display,
+//		"Account__c": flowVars.ehrPatient.Account__c,
+		("HealthCloudGA__CriticalityLabel__c": ((payload.criticality map $) joinBy ', ') when (payload.criticality is :array) otherwise payload.criticality) when (payload.criticality != null),
+		"HealthCloudGA__SubstanceLong__c": payload.substance.text,	
+		"HealthCloudGA__Substance255__c": payload.substance.text,
+//		"Patient__c": flowVars.ehrPatient.Id,
+//		"Recorder__c": flowVars.practitionerId,
+		("HealthCloudGA__Reaction__c": ((payload.reaction map $.manifestation.text) joinBy ', ') when (payload.reaction is :array) otherwise payload.reaction) when (payload.reaction != null),
+		"HealthCloudGA__RecordedDate__c": payload.recordedDate as :date default null
+}]]></dw:set-payload>
+            <dw:set-variable variableName="reporter"><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	number : (payload.reporter.reference splitBy '/')[-1],
+	type : (payload.reporter.reference splitBy '/')[0]
+} when payload.reporter != null otherwise null
+]]></dw:set-variable>
+            <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
+        </enricher>
+        <enricher source="#[payload != null ? payload.Id : null]" target="#[flowVars.practitionerId]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrPractitioner__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.reporter.number]'" doc:name="Get EmrPractitioner from SFDC"/>
+         </enricher>
+        
+        <dw:transform-message doc:name="Enhance EhrAllergyIntolerances">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map (
+	$ ++  
+	{
+		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
+		"HealthCloudGA__Recorder__c": flowVars.practitionerId,
+		"HealthCloudGA__Patient__c": flowVars.patient.Id
+	}
+)
+]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:upsert config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrAllergyIntolerance__c" doc:name="Upser EhrAllergyIntolerances" externalIdFieldName="Id">
+            <sfdc:objects ref="#[payload]"/>
+
+        </sfdc:upsert>
+        <logger message="New AllergyIntolerances were created succesfully, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+	
+	</flow>
     
 
     <flow name="post:/MedicationOrder:application/json:api-config">
@@ -372,6 +439,49 @@ payload map (
 %output application/json
 ---
 payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    
+    <flow name="post:/Device:application/json:api-config">
+<dw:transform-message doc:name="Prepare create of the EhrDevice in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	"HealthCloudGA__Manufacturer__c": payload.manufacturer,
+	"HealthCloudGA__Model__c": payload.model,
+	"HealthCloudGA__Type__c": payload.type.text,	
+	"HealthCloudGA__Contact__c": payload.contact[0].value,	
+	"HealthCloudGA__SourceSystemId__c": payload.id default null
+}
+]]></dw:set-payload>
+            <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Account__c, HealthCloudGA__Name__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
+        </enricher>
+        <dw:transform-message doc:name="Enhance EhrDevice data">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+[
+payload ++  {"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, "HealthCloudGA__Patient__c": flowVars.patient.Id}			
+]
+]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrDevice__c" doc:name="Create new EhrDevice">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="New Device was created succesfully, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
         </dw:transform-message>
     </flow>
 

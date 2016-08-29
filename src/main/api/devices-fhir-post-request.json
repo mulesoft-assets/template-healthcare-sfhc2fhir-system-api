@@ -1,0 +1,21 @@
+  {
+    "resourceType": "Device",
+    "patient": {
+      "reference": "patients/12345"
+    },
+    "text": {
+        "status": "good",
+        "div": "div"
+    },
+    "manufacturer": "Fitbit, Inc.",
+    "model": "Charge HR",
+    "type": {
+      "text": "TRACKER"
+    },
+    "contact": [
+      {
+        "system": "other",
+        "value": "https://www.fitbit.com/"
+      }
+    ]
+  }
