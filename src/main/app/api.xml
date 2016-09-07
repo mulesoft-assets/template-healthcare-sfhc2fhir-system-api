@@ -371,6 +371,7 @@ payload]]></dw:set-payload>
 (payload.code.coding map {
 //	"Account__c": flowVars.ehrPatient.Account__c,
 	"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
+	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 	"HealthCloudGA__Comments__c": "EPIC Observations",
 	"HealthCloudGA__NameCode__c": $.code,
 	"HealthCloudGA__NameLabel__c": $.display,
@@ -388,6 +389,7 @@ payload]]></dw:set-payload>
 	payload.component map {
 //		"Account__c": flowVars.ehrPatient.Account__c,
 		"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
+		"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 		"HealthCloudGA__Comments__c": "EPIC Observations",
 		"HealthCloudGA__NameCode__c": $.code.coding.code,
 		"HealthCloudGA__NameLabel__c": $.code.coding.display,
@@ -442,6 +444,41 @@ payload]]></dw:set-payload>
         </dw:transform-message>
     </flow>
     
+    <flow name="get:/Observation:api-config">
+        <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrObservation__c WHERE HealthCloudGA__SourceSystemId__c = #[message.inboundProperties.'http.query.params'.identifier]" doc:name="Get EmrObservation's Id from SFDC"/>
+        <logger message="output #[payload]" level="INFO" doc:name="Logger"/>
+ <dw:transform-message doc:name="Transform to FHIR Bundle of Observations">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	resourceType: "Bundle",
+	type: "searchset",
+	link: [{
+		relation: "self",
+		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+	}],
+	meta: {
+		lastUpdated: now
+	},
+	total: 0 when payload == null otherwise 1,
+	entry: 
+		([{
+			fullUrl: "http://" ++ inboundProperties.host ++ "/api/Observation/" ++ payload.Id,
+			resource: {
+				resourceType: "Observation",
+				id: payload.Id,
+				
+				text: {
+					div: "",
+					status: "empty"
+				}
+			}
+	}]) when  payload != null otherwise []
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    
     <flow name="post:/Device:application/json:api-config">
 <dw:transform-message doc:name="Prepare create of the EhrDevice in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
@@ -451,8 +488,8 @@ payload]]></dw:set-payload>
 	"HealthCloudGA__Manufacturer__c": payload.manufacturer,
 	"HealthCloudGA__Model__c": payload.model,
 	"HealthCloudGA__Type__c": payload.type.text,	
-	"HealthCloudGA__Contact__c": payload.contact[0].value,	
-	"HealthCloudGA__SourceSystemId__c": payload.id default null
+	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
+	"HealthCloudGA__Contact__c": payload.contact[0].value	
 }
 ]]></dw:set-payload>
             <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
@@ -481,6 +518,40 @@ payload ++  {"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Accoun
 %output application/java
 ---
 {
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="get:/Device:api-config">
+        <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrDevice__c WHERE HealthCloudGA__SourceSystemId__c = #[message.inboundProperties.'http.query.params'.identifier]" doc:name="Get EmrDevice's Id from SFDC"/>
+        <logger message="output #[payload]" level="INFO" doc:name="Logger"/>
+ <dw:transform-message doc:name="Transform to FHIR Bundle of Devices">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	resourceType: "Bundle",
+	type: "searchset",
+	link: [{
+		relation: "self",
+		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+	}],
+	meta: {
+		lastUpdated: now
+	},
+	total: 0 when payload == null otherwise 1,
+	entry: 
+		([{
+			fullUrl: "http://" ++ inboundProperties.host ++ "/api/Device/" ++ payload.Id,
+			resource: {
+				resourceType: "Device",
+				id: payload.Id,
+				
+				text: {
+					div: "",
+					status: "empty"
+				}
+			}
+	}]) when  payload != null otherwise []
 }]]></dw:set-payload>
         </dw:transform-message>
     </flow>

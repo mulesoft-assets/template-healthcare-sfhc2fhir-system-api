@@ -7,6 +7,10 @@
         "status": "good",
         "div": "div"
     },
+    "identifier" : [{
+    	"value": "12345"
+    	
+    }],
     "manufacturer": "Fitbit, Inc.",
     "model": "Charge HR",
     "type": {
