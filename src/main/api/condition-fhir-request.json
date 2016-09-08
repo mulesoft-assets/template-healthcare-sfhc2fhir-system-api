@@ -1,12 +1,16 @@
   {
     "resourceType": "Condition",
     "patient": {
-      "reference": "patients/12345"
+      "reference": "Patient/12345"
     },
     "text": {
         "status": "good",
         "div": "div"
     },
+    "identifier" : [{
+    	"value": "aaa"
+    	
+    }],
     "code": {
       "coding": [
         {

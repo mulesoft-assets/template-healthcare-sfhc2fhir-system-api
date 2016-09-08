@@ -37,6 +37,10 @@
       "use": "work"
     }
   ],
+  "identifier" : [{
+    	"value": "12345"
+    	
+    }],
   "gender": "male",
   "birthDate": "1971-11-07",
   "address": [
