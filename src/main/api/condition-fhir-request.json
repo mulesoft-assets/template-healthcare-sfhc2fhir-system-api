@@ -1,44 +1,22 @@
-  {
-    "resourceType": "Condition",
-    "patient": {
-      "reference": "Patient/12345"
-    },
-    "text": {
-        "status": "good",
-        "div": "div"
-    },
-    "identifier" : [{
-    	"value": "aaa"
-    	
-    }],
-    "code": {
+{
+   "resourceType": "Condition",
+   "id": "5",
+   "patient": {
+     "reference": "Patient/9"
+   },
+   "asserter": {
+     "reference": "Patient/9",
+     "display": ""
+   },
+   "code": {
       "coding": [
-        {
-          "code": "74400008",
-          "display": "Appendicitis",
-          "system": "http://snomed.info/sct"
-        },
-        {
-          "code": "541",
-          "display": "Appendicitis",
-          "system": "http://hl7.org/fhir/sid/icd-9-cm"
-        }
-      ],
-      "text": "Appendicitis"
-    },
-    "category": {
-      "coding": [
-        {
-          "code": "diagnosis",
-          "display": "Diagnosis",
-          "system": "http://hl7.org/fhir/condition-category"
-        },
-        {
-          "code": "439401001",
-          "display": "Diagnosis",
-          "system": "http://snomed.info/sct"
-        }
+       {
+         "code": "22298006",
+         "display": "Heart Attack",
+         "system": "http://snomed.info/sct"
+       }
       ]
-    },
-    "verificationStatus" : "good"
-  }
+   },
+   "verificationStatus": "unknown",
+   "onsetDateTime": ""
+}
