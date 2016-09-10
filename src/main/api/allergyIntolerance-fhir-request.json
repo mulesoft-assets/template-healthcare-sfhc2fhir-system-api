@@ -2,12 +2,16 @@
     "resourceType": "AllergyIntolerance",
     "recordedDate": "2015-08-28",
     "patient": {
-      "reference": "patients/12345"
+      "reference": "Patient/12345"
     },
     "reporter": {
-      "reference": "practitioners/27166",
+      "reference": "Practitioner/27166",
       "display": "CHAO, LING"
     },
+    "identifier" : [{
+    	"value": "bbb"
+    	
+    }],
     "text": {
         "status": "good",
         "div": "div"
@@ -23,164 +27,4 @@
     },
     "criticality": "CRITH",
     "type": "allergy"
-  },
-  {
-    "resourceType": "AllergyIntolerance",
-    "recordedDate": "2015-05-11",
-    "patient": {
-      "reference": "patients/mrn/12345"
-    },
-    "reporter": {
-      "reference": "practitioners/22614",
-      "display": "GOPALAKRISHNAN, VEERARAGAVAN"
-    },
-    "substance": {
-      "coding": [
-        {
-          "code": "36824",
-          "system": "Internal"
-        }
-      ],
-      "text": "PEANUT"
-    },
-    "criticality": "CRITH",
-    "type": "allergy"
-  },
-  {
-    "resourceType": "AllergyIntolerance",
-    "recordedDate": "2015-05-11",
-    "patient": {
-      "reference": "patients/mrn/12345"
-    },
-    "reporter": {
-      "reference": "practitioners/22614",
-      "display": "GOPALAKRISHNAN, VEERARAGAVAN"
-    },
-    "substance": {
-      "coding": [
-        {
-          "code": "25",
-          "system": "Internal"
-        }
-      ],
-      "text": "PENICILLINS"
-    },
-    "criticality": "CRITH",
-    "type": "allergy",
-    "reaction": [
-      {
-        "manifestation": {
-          "text": "Itching"
-        },
-        "description": "Itching"
-      },
-      {
-        "manifestation": {
-          "text": "Rash"
-        },
-        "description": "Rash"
-      }
-    ]
-  },
-  {
-    "resourceType": "AllergyIntolerance",
-    "recordedDate": "2015-06-17",
-    "patient": {
-      "reference": "patients/mrn/12345"
-    },
-    "reporter": {
-      "reference": "practitioners/22614",
-      "display": "GOPALAKRISHNAN, VEERARAGAVAN"
-    },
-    "substance": {
-      "coding": [
-        {
-          "code": "33302",
-          "system": "Internal"
-        }
-      ],
-      "text": "ACETAMINOPHEN"
-    },
-    "criticality": "CRITU",
-    "type": "intolerance",
-    "reaction": [
-      {
-        "manifestation": {
-          "text": "Lightheadedness"
-        },
-        "description": "Lightheadedness"
-      }
-    ]
-  },
-  {
-    "resourceType": "AllergyIntolerance",
-    "recordedDate": "2015-06-17",
-    "patient": {
-      "reference": "patients/mrn/12345"
-    },
-    "reporter": {
-      "reference": "practitioners/22614",
-      "display": "GOPALAKRISHNAN, VEERARAGAVAN"
-    },
-    "substance": {
-      "coding": [
-        {
-          "code": "56535",
-          "system": "Internal"
-        }
-      ],
-      "text": "ANACIN-3 WITH CODEINE"
-    },
-    "criticality": "CRITU",
-    "type": "allergy",
-    "reaction": [
-      {
-        "manifestation": {
-          "text": "Diarrhea"
-        },
-        "description": "Diarrhea"
-      },
-      {
-        "manifestation": {
-          "text": "Delirium"
-        },
-        "description": "Delirium"
-      }
-    ]
-  },
-  {
-    "resourceType": "AllergyIntolerance",
-    "recordedDate": "2015-05-11",
-    "patient": {
-      "reference": "patients/mrn/12345"
-    },
-    "reporter": {
-      "reference": "practitioners/22614",
-      "display": "GOPALAKRISHNAN, VEERARAGAVAN"
-    },
-    "substance": {
-      "coding": [
-        {
-          "code": "8891",
-          "system": "Internal"
-        }
-      ],
-      "text": "SHELLFISH DERIVED"
-    },
-    "criticality": "CRITU",
-    "type": "intolerance",
-    "reaction": [
-      {
-        "manifestation": {
-          "text": "Nausea And Vomiting"
-        },
-        "description": "Nausea And Vomiting"
-      },
-      {
-        "manifestation": {
-          "text": "Rash"
-        },
-        "description": "Rash"
-      }
-    ]
 }
