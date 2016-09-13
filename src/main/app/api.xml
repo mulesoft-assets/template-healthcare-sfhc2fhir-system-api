@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" 
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
 	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+	xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" 
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" 
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
@@ -12,13 +19,15 @@ http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/a
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
-    <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="api-config" raml="healthcare-system-api.raml" consoleEnabled="false" doc:name="Router" />
+    <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="api-config" raml="healthcare-system-api.raml" consoleEnabled="false" doc:name="Router" >
+    </apikit:config>
     <context:property-placeholder location="common.properties, mule.${mule.env}.properties"/>
     <sfdc:config name="Salesforce__Basic_Authentication" username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.token}" doc:name="Salesforce: Basic Authentication" disableSessionInvalidation="true"/>
     
     <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <logger message="#[message.inboundProperties.'http.method'] #[message.inboundProperties.'http.request.uri' + message.inboundProperties.'http.query.string'] #[&quot;\n&quot; + message.payloadAs(java.lang.String)]" level="INFO" doc:name="Log request"/>
         <apikit:router config-ref="api-config" doc:name="APIkit Router"/>
         <exception-strategy ref="api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
     </flow>
@@ -143,23 +152,27 @@ payload
         </dw:transform-message>
     </flow>
     <flow name="put:/Condition/{id}:application/json:api-config">
-        <set-variable variableName="conditionID" value="#[message.inboundProperties.'http.uri.params'.id]" doc:name="Set conditionID"/>
+
         <dw:transform-message doc:name="Prepare create of the EhrConditions in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-(payload.code.coding map {
-	"Id" : flowVars.conditionID,
-//	"Account__c": flowVars.ehrPatient.Account__c,
+{
+	"Id" : flowVars.id,
+	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 	"HealthCloudGA__AbatementDetail255__c": "",
 	"HealthCloudGA__AbatementDetail__c": "",
-	"HealthCloudGA__CodeLabel__c": $.display,
-	"HealthCloudGA__CodeSystem__c": $.system,
-	"HealthCloudGA__Code__c": $.code,
+	"HealthCloudGA__CodeLabel__c": payload.code.coding[0].display,
+	"HealthCloudGA__CodeSystem__c": payload.code.coding[0].system,
+	"HealthCloudGA__Code__c": payload.code.coding[0].code,
 	"HealthCloudGA__Onset__c": payload.onsetDateTime,
-	"HealthCloudGA__StatusCode__c": "Active"
-//	"Patient__c": flowVars.ehrPatient.Id
-}) when (payload.code.coding != null) otherwise []]]></dw:set-payload>
+	"HealthCloudGA__StatusCode__c": "Active",
+	"HealthCloudGA__AsserterPatient__c": payload.asserter.reference 
+		when payload.asserter.reference startsWith "Patient" otherwise null,
+	"HealthCloudGA__AsserterPractitioner__c": payload.asserter.reference 
+		when payload.asserter.reference startsWith "Practitioner" otherwise null
+	
+} ]]></dw:set-payload>
             <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -172,14 +185,13 @@ payload
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload map (
-	$ ++  
+[
+	payload ++  
 	{
 		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
 		"HealthCloudGA__Patient__c": flowVars.patient.Id
 	}
-)
-
+]
 
 ]]></dw:set-payload>
         </dw:transform-message>
@@ -210,7 +222,7 @@ payload]]></dw:set-payload>
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -221,12 +233,7 @@ payload]]></dw:set-payload>
 			fullUrl: "http://" ++ inboundProperties.host ++ "/api/Condition/" ++ payload.Id,
 			resource: {
 				resourceType: "Condition",
-				id: payload.Id,
-				
-				text: {
-					div: "",
-					status: "empty"
-				}
+				id: payload.Id
 			}
 	}]) when  payload != null otherwise []
 }]]></dw:set-payload>
@@ -239,37 +246,44 @@ payload]]></dw:set-payload>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-(payload.code.coding map {
+//(payload.code.coding map {
 //	"Account__c": flowVars.ehrPatient.Account__c,
+{
 	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 	"HealthCloudGA__AbatementDetail255__c": "",
 	"HealthCloudGA__AbatementDetail__c": "",
-	"HealthCloudGA__CodeLabel__c": $.display,
-	"HealthCloudGA__CodeSystem__c": $.system,
-	"HealthCloudGA__Code__c": $.code,
+	"HealthCloudGA__CodeLabel__c": payload.code.coding[0].display,
+	"HealthCloudGA__CodeSystem__c": payload.code.coding[0].system,
+	"HealthCloudGA__Code__c": payload.code.coding[0].code,
 	"HealthCloudGA__Onset__c": payload.onsetDateTime,
-	"HealthCloudGA__StatusCode__c": "Active"
+	"HealthCloudGA__StatusCode__c": "Active",
+	"HealthCloudGA__AsserterPatient__c": payload.asserter.reference 
+		when payload.asserter.reference startsWith "Patient" otherwise null,
+	"HealthCloudGA__AsserterPractitioner__c": payload.asserter.reference 
+		when payload.asserter.reference startsWith "Practitioner" otherwise null
+	
 //	"Patient__c": flowVars.ehrPatient.Id
-}) when (payload.code.coding != null) otherwise []]]></dw:set-payload>
+} ]]></dw:set-payload>
             <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
 %output application/java
 ---
 (payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
         </dw:transform-message>
-        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
+        <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="save to var patient">
             <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
         </enricher>
         <dw:transform-message doc:name="Enhance EhrCondition">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload map (
-	$ ++  
+[
+	payload ++  
 	{
 		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
 		"HealthCloudGA__Patient__c": flowVars.patient.Id
 	}
-)
+]
+
 ]]></dw:set-payload>
         </dw:transform-message>
         <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrCondition__c" doc:name="Create new EhrConditions">
@@ -317,14 +331,14 @@ payload]]></dw:set-payload>
 ---
 (payload.patient.reference splitBy "/")[-1]]]></dw:set-variable>
         </dw:transform-message>
-        <logger message="blabla #[payload]" level="INFO" doc:name="Logger"/>
+
         <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
             <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
         </enricher>
         <enricher source="#[payload != null ? payload.Id : null]" target="#[flowVars.practitionerId]" doc:name="Message Enricher">
             <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrPractitioner__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.reporter.number]'" doc:name="Get EmrPractitioner from SFDC"/>
          </enricher>
-        <logger message="xxxxxxxxxxxx #[payload]" level="INFO" doc:name="Logger"/>
+
         
         <dw:transform-message doc:name="Enhance EhrAllergyIntolerances">
             <dw:set-payload><![CDATA[%dw 1.0
@@ -338,7 +352,7 @@ payload]]></dw:set-payload>
 	}			
 ]]]></dw:set-payload>
         </dw:transform-message>
-        <logger message="bbbbbb #[payload]" level="INFO" doc:name="Logger"/>
+
         <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrAllergyIntolerance__c" doc:name="Create new EhrAllergyIntolerances">
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
@@ -513,15 +527,15 @@ payload]]></dw:set-payload>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-(payload.code.coding map {
+{
 //	"Account__c": flowVars.ehrPatient.Account__c,
+//	"Patient__c": flowVars.ehrPatient.Id,
 	"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
 	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
-	"HealthCloudGA__Comments__c": "EPIC Observations",
-	"HealthCloudGA__NameCode__c": $.code,
-	"HealthCloudGA__NameLabel__c": $.display,
-	"HealthCloudGA__NameSystem__c": $.system,
-//	"Patient__c": flowVars.ehrPatient.Id,
+//	"HealthCloudGA__Comments__c": "EPIC Observations",
+	"HealthCloudGA__NameCode__c": payload.code.coding[0].code,
+	"HealthCloudGA__NameLabel__c": payload.code.coding[0].display,
+	"HealthCloudGA__NameSystem__c": payload.code.coding[0].system,
 	"HealthCloudGA__ReferenceRangeHighUnit__c": payload.referenceRange[0].high.unit,
 	"HealthCloudGA__ReferenceRangeHighValue__c": payload.referenceRange[0].high.value,
 	"HealthCloudGA__ReferenceRangeLowUnit__c": payload.referenceRange[0].low.unit,
@@ -530,51 +544,50 @@ payload]]></dw:set-payload>
 	"HealthCloudGA__ValueLabel__c": payload.valueQuantity.system,
 	"HealthCloudGA__ValueQuantityUnit__c": payload.valueQuantity.unit,
 	"HealthCloudGA__ValueQuantity__c": payload.valueQuantity.value
-}) when payload.component == null otherwise (
-	payload.component map {
-//		"Account__c": flowVars.ehrPatient.Account__c,
-		"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
-		"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
-		"HealthCloudGA__Comments__c": "EPIC Observations",
-		"HealthCloudGA__NameCode__c": $.code.coding.code,
-		"HealthCloudGA__NameLabel__c": $.code.coding.display,
-		"HealthCloudGA__NameSystem__c": $.code.coding.system,
-//		"Patient__c": flowVars.ehrPatient.Id,
-		"HealthCloudGA__ReferenceRangeHighUnit__c": $.referenceRange[0].high.unit,
-		"HealthCloudGA__ReferenceRangeHighValue__c": $.referenceRange[0].high.value,
-		"HealthCloudGA__ReferenceRangeLowUnit__c": $.referenceRange[0].low.unit,
-		"HealthCloudGA__ReferenceRangeLowValue__c": $.referenceRange[0].low.value,
-		"HealthCloudGA__ValueCode__c": $.valueQuantity.code,
-		"HealthCloudGA__ValueLabel__c": $.valueQuantity.system,
-		"HealthCloudGA__ValueQuantityUnit__c": $.valueQuantity.unit,
-		"HealthCloudGA__ValueQuantity__c": $.valueQuantity.value
 }
-)]]></dw:set-payload>
+
+]]></dw:set-payload>
             <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
 %output application/java
 ---
 (payload.subject.reference splitBy "/")[-1]]]></dw:set-variable>
+            <dw:set-variable variableName="deviceID"><![CDATA[%dw 1.0
+%output application/java
+---
+(payload.device.reference splitBy "/")[-1]]]></dw:set-variable>
         </dw:transform-message>
         <enricher source="#[payload]" target="#[flowVars.patient]" doc:name="Message Enricher">
             <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Name__c, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patientID]'" doc:name="Get EmrPatient from SFDC"/>
         </enricher>
-
-        <dw:transform-message doc:name="Enhance EhrObservations data">
+        <choice doc:name="Contains device reference?">
+            <when expression="#[flowVars.deviceID != null]">
+                <enricher source="#[payload]" target="#[flowVars.device]" doc:name="Message Enricher">
+                    <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Manufacturer__c, HealthCloudGA__Model__c FROM HealthCloudGA__EhrDevice__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.deviceID]'" doc:name="Get Device by identifier"/>
+                </enricher>
+            </when>
+            <otherwise>
+                <logger message="No device reference" level="INFO" doc:name="No device reference"/>
+            </otherwise>
+        </choice>
+        <dw:transform-message doc:name="Append to Observation">
             <dw:input-variable doc:sample="string.dwl" variableName="inputJson"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload map (
-	$ ++  
+[
+	payload ++  
 	{
-		"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c, 
-		"HealthCloudGA__Patient__c": flowVars.patient.Id
+	"HealthCloudGA__Account__c": flowVars.patient.HealthCloudGA__Account__c,
+	"HealthCloudGA__Patient__c": flowVars.patient.Id,
+	"HealthCloudGA__Device__c" : flowVars.device.Id
 	}
-)
+]
 
 
 ]]></dw:set-payload>
         </dw:transform-message>
+
+
         <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrObservation__c" doc:name="Create new EhrObservations">
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
@@ -701,13 +714,13 @@ payload ++  "HealthCloudGA__Patient__c": flowVars.patient.Id
         </dw:transform-message>
     </flow>
     <flow name="put:/Device/{id}:application/json:api-config">
-        <set-variable variableName="deviceID" value="#[message.inboundProperties.'http.uri.params'.id]" doc:name="Set deviceID"/>
+
     <dw:transform-message doc:name="Prepare create of the EhrDevice in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 {
-	"Id" : flowVars.deviceID,
+	"Id" : flowVars.id,
 	"HealthCloudGA__Manufacturer__c": payload.manufacturer,
 	"HealthCloudGA__Model__c": payload.model,
 	"HealthCloudGA__Type__c": payload.type.text,	
@@ -748,40 +761,41 @@ payload ++  "HealthCloudGA__Patient__c": flowVars.patient.Id
     
     
     <flow name="post:/Practitioner:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC">
+        <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC" metadata:id="e4f3977a-4470-425f-aacb-99ca6e5c5ca2">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 [{
-	"HealthCloudGA__Address1City__c": payload.address[0].city,
-	"HealthCloudGA__Address1Country__c": payload.address[0].country,
-	"HealthCloudGA__Address1Line1__c": payload.address[0].line[0],
-	"HealthCloudGA__Address1Line2__c": "",
+	"HealthCloudGA__Address1City__c"      : payload.address[0].city,
+	"HealthCloudGA__Address1Country__c"   : payload.address[0].country,
+	"HealthCloudGA__Address1Line1__c"     : payload.address[0].line[0],
+	"HealthCloudGA__Address1Line2__c"     : "",
 	"HealthCloudGA__Address1PostalCode__c": payload.address[0].postalCode,
-	"HealthCloudGA__Address1State__c": payload.address[0].state,
-	"HealthCloudGA__Address1Use__c": payload.address[0].use,
-	"HealthCloudGA__FamilyName1__c": payload.name[0].family[0] when (payload.name[0].family[0] != null) otherwise "",
-	"HealthCloudGA__Gender__c": payload.gender,
-	"HealthCloudGA__GivenName1__c": payload.name[0].given[0] when (payload.name[0].given[0] != null) otherwise "",
-	"HealthCloudGA__Name255__c": ((payload.name[0].given[0] ++ " ") when (payload.name[0].given[0] != null) otherwise "") 
+	"HealthCloudGA__Address1State__c"     : payload.address[0].state,
+	"HealthCloudGA__Address1Use__c"       : payload.address[0].use,
+	"HealthCloudGA__FamilyName1__c"       : payload.name[0].family[0] when (payload.name[0].family[0] != null) otherwise "",
+	"HealthCloudGA__Gender__c"            : payload.gender,
+	"HealthCloudGA__GivenName1__c"        : payload.name[0].given[0] when (payload.name[0].given[0] != null) otherwise "",
+	"HealthCloudGA__Name255__c"           : ((payload.name[0].given[0] ++ " ") when (payload.name[0].given[0] != null) otherwise "") 
 			++ (payload.name[0].family[0]) when (payload.name[0].family[0] != null) otherwise "",
-	"HealthCloudGA__PrefixName1__c": payload.name[0].prefix[0],
-	"HealthCloudGA__SourceSystemId__c": payload.identifier[0].value,
-	"HealthCloudGA__SpecialtyCode__c": payload.practitionerRole[0].specialty[0].coding[0].code,
-	"HealthCloudGA__SpecialtySystem__c": payload.practitionerRole[0].specialty[0].coding[0].system,
-	"HealthCloudGA__SuffixName1__c": payload.name[0].suffix[0],
-	"HealthCloudGA__Telecom1Use__c": payload.telecom[0].use,
-	"HealthCloudGA__Telecom1Value__c": payload.telecom[0].value,
-	"HealthCloudGA__Telecom1System__c": payload.telecom[0].system,
-	"HealthCloudGA__Telecom2Use__c": payload.telecom[1].use,
-	"HealthCloudGA__Telecom2Value__c": payload.telecom[1].value,
-	"HealthCloudGA__Telecom2System__c": payload.telecom[1].system,
-	"HealthCloudGA__Telecom3Use__c": payload.telecom[2].use,
-	"HealthCloudGA__Telecom3Value__c": payload.telecom[2].value,
-	"HealthCloudGA__Telecom3System__c": payload.telecom[2].system,
-	("HealthCloudGA__BirthDate__c": payload.birthDate as :date) when payload.birthDate != null
+	"HealthCloudGA__PrefixName1__c"       : payload.name[0].prefix[0],
+	"HealthCloudGA__SourceSystemId__c"    : payload.identifier[0].value,
+	"HealthCloudGA__SpecialtyCode__c"     : payload.practitionerRole[0].specialty[0].coding[0].code,
+	"HealthCloudGA__SpecialtySystem__c"   : payload.practitionerRole[0].specialty[0].coding[0].system,
+	"HealthCloudGA__SuffixName1__c"       : payload.name[0].suffix[0],
+	"HealthCloudGA__Telecom1Use__c"       : (payload.telecom filter $.system == "phone")[0].use,
+	"HealthCloudGA__Telecom1Value__c"     : (payload.telecom filter $.system == "phone")[0].value,
+	"HealthCloudGA__Telecom1System__c"    : (payload.telecom filter $.system == "phone")[0].system,
+	"HealthCloudGA__Telecom2Use__c"       : (payload.telecom filter $.system == "fax")[0].use,
+	"HealthCloudGA__Telecom2Value__c"     : (payload.telecom filter $.system == "fax")[0].value,
+	"HealthCloudGA__Telecom2System__c"    : (payload.telecom filter $.system == "fax")[0].system,
+	"HealthCloudGA__Telecom3Use__c"       : (payload.telecom filter $.system == "email")[0].use,
+	"HealthCloudGA__Telecom3Value__c"     : (payload.telecom filter $.system == "email")[0].value,
+	"HealthCloudGA__Telecom3System__c"    : (payload.telecom filter $.system == "email")[0].system,
+	("HealthCloudGA__BirthDate__c"        : payload.birthDate as :date) when payload.birthDate != null
 }]]]></dw:set-payload>
         </dw:transform-message>
+
         
            <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrPractitioner__c" doc:name="Create new EhrPractitioner">
             <sfdc:objects ref="#[payload]"/>
@@ -802,7 +816,7 @@ payload]]></dw:set-payload>
 %output application/java
 ---
 [{
-	"Id" : inboundProperties.'http.uri.params'.id,
+	"Id" : flowVars.id,
 	"HealthCloudGA__Address1City__c": payload.address[0].city,
 	"HealthCloudGA__Address1Country__c": payload.address[0].country,
 	"HealthCloudGA__Address1Line1__c": payload.address[0].line[0],
@@ -820,15 +834,15 @@ payload]]></dw:set-payload>
 	"HealthCloudGA__SpecialtyCode__c": payload.practitionerRole[0].specialty[0].coding[0].code,
 	"HealthCloudGA__SpecialtySystem__c": payload.practitionerRole[0].specialty[0].coding[0].system,
 	"HealthCloudGA__SuffixName1__c": payload.name[0].suffix[0],
-	"HealthCloudGA__Telecom1Use__c": payload.telecom[0].use,
-	"HealthCloudGA__Telecom1Value__c": payload.telecom[0].value,
-	"HealthCloudGA__Telecom1System__c": payload.telecom[0].system,
-	"HealthCloudGA__Telecom2Use__c": payload.telecom[1].use,
-	"HealthCloudGA__Telecom2Value__c": payload.telecom[1].value,
-	"HealthCloudGA__Telecom2System__c": payload.telecom[1].system,
-	"HealthCloudGA__Telecom3Use__c": payload.telecom[2].use,
-	"HealthCloudGA__Telecom3Value__c": payload.telecom[2].value,
-	"HealthCloudGA__Telecom3System__c": payload.telecom[2].system,
+	"HealthCloudGA__Telecom1Use__c"       : (payload.telecom filter $.system == "phone")[0].use,
+	"HealthCloudGA__Telecom1Value__c"     : (payload.telecom filter $.system == "phone")[0].value,
+	"HealthCloudGA__Telecom1System__c"    : (payload.telecom filter $.system == "phone")[0].system,
+	"HealthCloudGA__Telecom2Use__c"       : (payload.telecom filter $.system == "fax")[0].use,
+	"HealthCloudGA__Telecom2Value__c"     : (payload.telecom filter $.system == "fax")[0].value,
+	"HealthCloudGA__Telecom2System__c"    : (payload.telecom filter $.system == "fax")[0].system,
+	"HealthCloudGA__Telecom3Use__c"       : (payload.telecom filter $.system == "email")[0].use,
+	"HealthCloudGA__Telecom3Value__c"     : (payload.telecom filter $.system == "email")[0].value,
+	"HealthCloudGA__Telecom3System__c"    : (payload.telecom filter $.system == "email")[0].system,
 	("HealthCloudGA__BirthDate__c": payload.birthDate as :date) when payload.birthDate != null
 }]]]></dw:set-payload>
         </dw:transform-message>
@@ -859,7 +873,7 @@ payload]]></dw:set-payload>
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -870,26 +884,13 @@ payload]]></dw:set-payload>
 			fullUrl: "http://" ++ inboundProperties.host ++ "/api/Practitioner/" ++ payload.Id,
 			resource: {
 				resourceType: "Practitioner",
-				id: payload.Id,
-				
-				text: {
-					div: "",
-					status: "empty"
-				}
+				id: payload.Id
 			}
 	}]) when  payload != null otherwise []
 }]]></dw:set-payload>
         </dw:transform-message>
     </flow>
-    
-    <flow name="post:/Scheduling:application/json:api-config">
-        <dw:transform-message doc:name="Generate response">
-            <dw:set-payload><![CDATA[%dw 1.0
-%output application/json
----
-"message": "Not supported yet."]]></dw:set-payload>
-        </dw:transform-message>
-    </flow>
+
     <flow name="put:/Appointment/{id}:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the EhrEncounters in SFDC and store encunterParticipant in variable">
             <dw:input-payload doc:sample="sample_data\json_1.json"/>
@@ -1015,7 +1016,7 @@ flatten (flowVars.obsoleteEncounterParticipants ++ [payload.Id]) when (payload !
         <apikit:mapping statusCode="400">
             <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
             <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot;, &quot;error&quot;: &quot;#[exception.getMessage()]&quot;}" doc:name="Set Payload"/>
         </apikit:mapping>
     </apikit:mapping-exception-strategy>
 </mule>
