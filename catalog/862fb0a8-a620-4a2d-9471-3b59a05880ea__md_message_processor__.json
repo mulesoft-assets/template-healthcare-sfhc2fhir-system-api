@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "Salesforce__Basic_Authentication",
+            "typeId": "HealthCloudGA__EhrPatient__c"
+        }
+    },
+    "id": "862fb0a8-a620-4a2d-9471-3b59a05880ea",
+    "version": "5.2.0.0"
+}

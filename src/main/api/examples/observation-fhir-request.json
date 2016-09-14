@@ -1,15 +1,11 @@
   {
     "resourceType": "Observation",
     "subject": {
-      "reference": "patients/12345"
+      "reference": "Patient/12345"
     },
-    "text": {
-        "status": "good",
-        "div": "div"
-    },
-        "identifier" : [{
-    	"value": "12345"
-    	
+    "identifier" : [{
+		"value": "54"
+	
     }],
     "status": "preliminary",
     "code": {

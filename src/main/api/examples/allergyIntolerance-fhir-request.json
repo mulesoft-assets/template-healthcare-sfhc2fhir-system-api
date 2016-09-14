@@ -5,11 +5,11 @@
       "reference": "Patient/12345"
     },
     "reporter": {
-      "reference": "Practitioner/27166",
+      "reference": "Practitioner/27",
       "display": "CHAO, LING"
     },
     "identifier" : [{
-    	"value": "bbb"
+    	"value": "454"
     	
     }],
     "text": {

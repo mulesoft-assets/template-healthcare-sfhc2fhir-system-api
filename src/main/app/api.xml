@@ -910,7 +910,7 @@ payload]]></dw:set-payload>
 	//"Patient__c": flowVars.ehrPatient.Id default null,
 	"HealthCloudGA__PeriodEnd__c": payload.end as :datetime default null,
 	"HealthCloudGA__PeriodStart__c": payload.start as :datetime default null,
-	"HealthCloudGA__SourceSystemId__c": payload.id,
+	"HealthCloudGA__SourceSystemId__c": payload.identifier[0].value,
 	"HealthCloudGA__Status__c": payload.status,
 	"HealthCloudGA__TypeLabel__c": payload.description
 }]]></dw:set-payload>
@@ -972,7 +972,7 @@ payload]]></dw:set-payload>
 	//"Patient__c": flowVars.ehrPatient.Id default null,
 	"HealthCloudGA__PeriodEnd__c": payload.end as :datetime default null,
 	"HealthCloudGA__PeriodStart__c": payload.start as :datetime default null,
-	"HealthCloudGA__SourceSystemId__c": payload.id,
+	"HealthCloudGA__SourceSystemId__c": payload.identifier[0].value,
 	"HealthCloudGA__Status__c": payload.status,
 	"HealthCloudGA__TypeLabel__c": payload.description
 }]]></dw:set-payload>
@@ -1029,6 +1029,36 @@ payload ++  {"HealthCloudGA__Account__c": flowVars.ehrPatient.HealthCloudGA__Acc
 payload]]></dw:set-payload>
         </dw:transform-message>
     </flow>    
+    
+     <flow name="get:/Appointment:api-config">
+        <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounter__c WHERE HealthCloudGA__SourceSystemId__c = '#[message.inboundProperties.'http.query.params'.identifier]'" doc:name="Get EhrEncounter's Id from SFDC"/>
+        <logger level="INFO" doc:name="Log the success"/>
+        <dw:transform-message doc:name="Transform to FHIR Bundle of Appointments">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	resourceType: "Bundle",
+	type: "searchset",
+	link: [{
+		relation: "self",
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
+	}],
+	meta: {
+		lastUpdated: now
+	},
+	total: 0 when payload == null otherwise 1,
+	entry: 
+		([{
+			fullUrl: "http://" ++ inboundProperties.host ++ "/api/Appointment/" ++ payload.Id,
+			resource: {
+				resourceType: "Appointment",
+				id: payload.Id
+			}
+	}]) when  payload != null otherwise []
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
     
       <sub-flow name="deleteObsoleteEncounterParticipantsSubFlow">
         <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounterParticipant__c WHERE HealthCloudGA__Encounter__c = '#[flowVars.sfdcEncounterId]'" doc:name="Get obsolete EhrEncounterParticipant IDs from SFDC"/>
@@ -1089,4 +1119,5 @@ payload]]></dw:set-payload>
             <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot;, &quot;error&quot;: &quot;#[exception.getMessage()]&quot;}" doc:name="Set Payload"/>
         </apikit:mapping>
     </apikit:mapping-exception-strategy>
+   
 </mule>

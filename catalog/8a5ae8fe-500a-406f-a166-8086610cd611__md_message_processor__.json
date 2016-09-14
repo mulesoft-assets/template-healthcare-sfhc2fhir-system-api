@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "Salesforce__Basic_Authentication",
+            "typeId": "HealthCloudGA__EhrAllergyIntolerance__c"
+        }
+    },
+    "id": "8a5ae8fe-500a-406f-a166-8086610cd611",
+    "version": "5.2.0.0"
+}

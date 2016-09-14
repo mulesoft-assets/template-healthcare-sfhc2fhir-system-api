@@ -3,10 +3,6 @@
     "patient": {
       "reference": "patients/12345"
     },
-    "text": {
-        "status": "good",
-        "div": "div"
-    },
     "identifier" : [{
     	"value": "12345"
     	

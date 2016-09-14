@@ -1,6 +1,10 @@
 {
    "resourceType": "Condition",
    "id": "5",
+   "identifier" : [{
+    	"value": "5"
+    	
+    }],
    "patient": {
      "reference": "Patient/9"
    },

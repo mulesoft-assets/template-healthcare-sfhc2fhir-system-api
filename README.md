@@ -1,4 +1,4 @@
-# Template Healthcare SFHC to FHIR System API
+# Template Healthcare Salesforce Health Cloud System API
 
 + [License Agreement](#licenseagreement)
 + [Use Case](#usecase)
@@ -19,11 +19,8 @@ Please review the terms of the license before downloading and using this templat
 
 # Use Case <a name="usecase"/>
 
-TODO
 
 This template should serve as a foundation for setting an API implementation for Condition data retrieval. API is defined in [RAML](https://docs.mulesoft.com/anypoint-platform-for-apis/walkthrough-design-existing#about-raml) and implementation is using [APIkit](https://docs.mulesoft.com/anypoint-platform-for-apis/apikit-basic-anatomy#basic-anatomy). Condition API is retrieving data from EHR system and transform them to JSON in respect with FHIR specification [version 1.0.2 DSTU2](https://www.hl7.org/FHIR/DSTU2/index.html). The solution should be secured, see the [API Security Consideration](#apissecurityconsiderations).
-
-TODO
 
 # Considerations <a name="considerations"/>
 

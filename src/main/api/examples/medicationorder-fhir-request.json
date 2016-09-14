@@ -3,15 +3,11 @@
     "resourceType": "MedicationOrder",
     "status": "active",
     "patient": {
-      "reference": "patients/12345"
+      "reference": "Patient/12345"
     },
     "prescriber": {
       "reference": "practitioners/99999",
       "display": "PROVIDER, NOT CONFIRMED"
-    },
-    "text": {
-        "status": "good",
-        "div": "div"
     },
     "dosageInstruction": [
       {
