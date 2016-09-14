@@ -890,9 +890,70 @@ payload]]></dw:set-payload>
 }]]></dw:set-payload>
         </dw:transform-message>
     </flow>
+    
+    <flow name="post:/Appointment:application/json:api-config">
+        <dw:transform-message doc:name="Prepare create of the EhrEncounter in SFDC and store encunter participants in variables">
+            <dw:input-payload doc:sample="sample_data\json_1.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	//"Account__c": flowVars.ehrPatient.Account__c default null,
+	"HealthCloudGA__LengthUnit__c": "min",
+	"HealthCloudGA__LengthValue__c": payload.minutesDuration,
+	//"Patient__c": flowVars.ehrPatient.Id default null,
+	"HealthCloudGA__PeriodEnd__c": payload.end as :datetime default null,
+	"HealthCloudGA__PeriodStart__c": payload.start as :datetime default null,
+	"HealthCloudGA__SourceSystemId__c": payload.id,
+	"HealthCloudGA__Status__c": payload.status,
+	"HealthCloudGA__TypeLabel__c": payload.description
+}]]></dw:set-payload>
+            <dw:set-variable variableName="practitioner"><![CDATA[%dw 1.0
+%output application/java
+---
+using (practitionerRef = (payload.participant.actor.reference filter ($ startsWith "Practitioner"))[0])
+{
+	"participantId":  (practitionerRef splitBy "/")[-1] default ""
+}]]></dw:set-variable>
+            <dw:set-variable variableName="patient"><![CDATA[%dw 1.0
+%output application/java
+---
+using (patientRef = (payload.participant.actor.reference filter ($ startsWith "Patient"))[0])
+{
+	"participantId":  (patientRef splitBy "/")[-1] default ""
+}]]></dw:set-variable>
+            <dw:set-variable variableName="appointmentId"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.id]]></dw:set-variable>
+        </dw:transform-message>
+        <enricher source="#[payload]" target="#[flowVars.ehrPatient]" doc:name="Set ehrPatient variable">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patient.participantId]'" doc:name="Get EhrPatient from SFDC"/>
+        </enricher>
+        <dw:transform-message doc:name="Enhance EhrEncounter with ehrPatient">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+[
+payload ++  {"HealthCloudGA__Account__c": flowVars.ehrPatient.HealthCloudGA__Account__c, "HealthCloudGA__Patient__c": flowVars.ehrPatient.Id}			
+]
+]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrEncounter__c" doc:name="Create EhrEncounter">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="Encounter was created, payload is: #[payload]" level="INFO" doc:name="Log success"/>
+        <flow-ref name="createEncounterParticipantSubFlow" doc:name="createEncounterParticipantSubFlow"/>
+        <dw:transform-message doc:name="Transform response to JSON">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
 
     <flow name="put:/Appointment/{id}:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of the EhrEncounters in SFDC and store encunterParticipant in variable">
+        <dw:transform-message doc:name="Prepare create of the EhrEncounter in SFDC and store encunter participants in variable">
             <dw:input-payload doc:sample="sample_data\json_1.json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
@@ -914,7 +975,6 @@ payload]]></dw:set-payload>
 ---
 using (practitionerRef = (payload.participant.actor.reference filter ($ startsWith "Practitioner"))[0])
 {
-	"encounterId": payload.id,
 	"participantId":  (practitionerRef splitBy "/")[-1] default ""
 }]]></dw:set-variable>
             <dw:set-variable variableName="patient"><![CDATA[%dw 1.0
@@ -922,15 +982,22 @@ using (practitionerRef = (payload.participant.actor.reference filter ($ startsWi
 ---
 using (patientRef = (payload.participant.actor.reference filter ($ startsWith "Patient"))[0])
 {
-	"encounterId": payload.id,
 	"participantId":  (patientRef splitBy "/")[-1] default ""
 }]]></dw:set-variable>
+            <dw:set-variable variableName="appointmentId"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.id]]></dw:set-variable>
+            <dw:set-variable variableName="sfdcEncounterId"><![CDATA[%dw 1.0
+%output application/java
+---
+inboundProperties.'http.uri.params'.id]]></dw:set-variable>
 
         </dw:transform-message>
-        <enricher source="#[payload]" target="#[flowVars.ehrPatient]" doc:name="Message Enricher">
+        <enricher source="#[payload]" target="#[flowVars.ehrPatient]" doc:name="Set ehrPatient variable">
             <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.patient.participantId]'" doc:name="Get EhrPatient from SFDC"/>
         </enricher>
-        <dw:transform-message doc:name="Enhance EhrEncounter">
+        <dw:transform-message doc:name="Enhance EhrEncounter with ehrPatient">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -940,31 +1007,15 @@ payload ++  {"HealthCloudGA__Account__c": flowVars.ehrPatient.HealthCloudGA__Acc
 ]]></dw:set-payload>
         </dw:transform-message>
         
-        <sfdc:upsert config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrEncounter__c" doc:name="Upsert EhrEncounters" externalIdFieldName="Id">
+        <sfdc:upsert config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrEncounter__c" doc:name="Upsert EhrEncounter" externalIdFieldName="Id">
             <sfdc:objects ref="#[payload]"/>
         </sfdc:upsert>
-        <logger message="Encounters were created, payload is: #[payload]" level="INFO" doc:name="Log success"/>
-        <enricher source="#[payload == null ? null : payload.Id]" target="#[flowVars.sfdcEncounterId]" doc:name="Enrich with SFDC Encounter ID">
-            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounter__c WHERE HealthCloudGA__SourceSystemId__c = '111'" doc:name="Get EhrEncounter ID from SFDC"/>
-        </enricher>
-        <enricher source="#[payload == null ? null : payload.Id]" target="#[flowVars.sfdcPractitionerId]" doc:name="Enrich with SFDC Practitioner ID">
-            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrPractitioner__c WHERE HealthCloudGA__SourceSystemId__c = '2222'" doc:name="Get EhrPractitioner ID from SFDC"/>
-        </enricher>
+        <logger message="Encounter was upserted, payload is: #[payload]" level="INFO" doc:name="Log success"/>
+
 
         <flow-ref name="deleteObsoleteEncounterParticipantsSubFlow" doc:name="deleteObsoleteEncounterParticipants"/>
-        <dw:transform-message doc:name="Prepare create of the EhrEncounterParticipants in SFDC">
-            <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-[{
-	"HealthCloudGA__Encounter__c": flowVars.sfdcEncounterId,
-	"HealthCloudGA__Practitioner__c": flowVars.sfdcPractitionerId
-}]]]></dw:set-payload>
-        </dw:transform-message>
-        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrEncounterParticipant__c" doc:name="Create new EhrEncounterParticipants">
-            <sfdc:objects ref="#[payload]"/>
-        </sfdc:create>
-        <logger message="Encounter Participants were created, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
+        <flow-ref name="createEncounterParticipantSubFlow" doc:name="createEncounterParticipantSubFlow"/>
+
         <dw:transform-message doc:name="Transform response to JSON">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
@@ -974,22 +1025,34 @@ payload]]></dw:set-payload>
     </flow>    
     
       <sub-flow name="deleteObsoleteEncounterParticipantsSubFlow">
-        <set-variable variableName="obsoleteEncounterParticipants" value="#[[]]" doc:name="Init obsoleteEncounterParticipants"/>
-        <foreach collection="#[flowVars.encounterParticipant]" doc:name="For Each Encounter">
-            <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounterParticipant__c WHERE HealthCloudGA__Encounter__c = '#[flowVars.sfdcEncounterId]'" doc:name="Get obsolete EhrEncounterParticipant IDs from SFDC"/>
-            <foreach collection="#[payload]" doc:name="For Each Encounter Participant">
-                <dw:transform-message doc:name="Add Encounter Participant ID to obsoleteEncounterParticipants list">
-                    <dw:set-variable variableName="obsoleteEncounterParticipants"><![CDATA[%dw 1.0
+        <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounterParticipant__c WHERE HealthCloudGA__Encounter__c = '#[flowVars.sfdcEncounterId]'" doc:name="Get obsolete EhrEncounterParticipant IDs from SFDC"/>
+        <sfdc:delete config-ref="Salesforce__Basic_Authentication" doc:name="Delete obsolete EhrEncounterParticipants">
+            <sfdc:ids ref="#[(payload.hasNext()) ? [payload.next().Id] : []]"/>
+        </sfdc:delete>
+        <logger message="Deleted obsolete Encounter Participant: #[payload]" level="INFO" doc:name="Log success"/>
+    </sub-flow>
+    
+    <sub-flow name="createEncounterParticipantSubFlow">
+        <enricher source="#[payload == null ? null : payload.Id]" target="#[flowVars.sfdcEncounterId]" doc:name="Set sfdcEncounterId variable">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrEncounter__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.appointmentId]'" doc:name="Get EhrEncounter ID from SFDC"/>
+        </enricher>
+        <enricher source="#[payload == null ? null : payload.Id]" target="#[flowVars.sfdcPractitionerId]" doc:name="Set sfdcPractitionerId variable">
+            <sfdc:query-single config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id FROM HealthCloudGA__EhrPractitioner__c WHERE HealthCloudGA__SourceSystemId__c = '#[flowVars.practitioner.participantId]'" doc:name="Get EhrPractitioner ID from SFDC"/>
+        </enricher>
+
+        <dw:transform-message doc:name="Prepare create of the EhrEncounterParticipant in SFDC">
+            <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-flatten (flowVars.obsoleteEncounterParticipants ++ [payload.Id]) when (payload != null and payload.Id != null) otherwise flowVars.obsoleteEncounterParticipants]]></dw:set-variable>
-                </dw:transform-message>
-            </foreach>
-        </foreach>
-        <sfdc:delete config-ref="Salesforce__Basic_Authentication" doc:name="Delete obsolete EhrEncounterParticipants">
-            <sfdc:ids ref="#[flowVars.obsoleteEncounterParticipants]"/>
-        </sfdc:delete>
-        <logger message="Deleted obsolete Encounter Participants: #[payload]" level="INFO" doc:name="Log success"/>
+[{
+	"HealthCloudGA__Encounter__c": flowVars.sfdcEncounterId,
+	"HealthCloudGA__Practitioner__c": flowVars.sfdcPractitionerId
+}]]]></dw:set-payload>
+        </dw:transform-message>
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrEncounterParticipant__c" doc:name="Create new EhrEncounterParticipant">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <logger message="Encounter Participant was created, payload is: #[payload]" level="INFO" doc:name="Log the success"/>
     </sub-flow>
 
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
