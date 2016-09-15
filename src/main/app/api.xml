@@ -252,8 +252,6 @@ payload]]></dw:set-payload>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-//(payload.code.coding map {
-//	"Account__c": flowVars.ehrPatient.Account__c,
 {
 	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 	"HealthCloudGA__AbatementDetail255__c": "",
@@ -267,8 +265,7 @@ payload]]></dw:set-payload>
 		when payload.asserter.reference startsWith "Patient" otherwise null,
 	"HealthCloudGA__AsserterPractitioner__c": payload.asserter.reference 
 		when payload.asserter.reference startsWith "Practitioner" otherwise null
-	
-//	"Patient__c": flowVars.ehrPatient.Id
+
 } ]]></dw:set-payload>
             <dw:set-variable variableName="patientID"><![CDATA[%dw 1.0
 %output application/java
@@ -315,12 +312,9 @@ payload]]></dw:set-payload>
 {
 		"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 		"HealthCloudGA__RecorderName__c": payload.reporter.display,
-//		"Account__c": flowVars.ehrPatient.Account__c,
 		"HealthCloudGA__CriticalityLabel__c": payload.criticality,
 		"HealthCloudGA__SubstanceLong__c": payload.substance.text,	
 		"HealthCloudGA__Substance255__c": payload.substance.text,
-//		"Patient__c": flowVars.ehrPatient.Id,
-//		"Recorder__c": flowVars.practitionerId,
 		("HealthCloudGA__Reaction__c": ((payload.reaction map $.manifestation.text) joinBy ', ') when (payload.reaction is :array) otherwise payload.reaction) when (payload.reaction != null),
 		"HealthCloudGA__RecordedDate__c": payload.recordedDate as :date default null
 }]]></dw:set-payload>
@@ -382,12 +376,9 @@ payload]]></dw:set-payload>
 		"Id" : flowVars.id,
 		"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
 		"HealthCloudGA__RecorderName__c": payload.reporter.display,
-//		"Account__c": flowVars.ehrPatient.Account__c,
 		"HealthCloudGA__CriticalityLabel__c": payload.criticality,
 		"HealthCloudGA__SubstanceLong__c": payload.substance.text,	
 		"HealthCloudGA__Substance255__c": payload.substance.text,
-//		"Patient__c": flowVars.ehrPatient.Id,
-//		"Recorder__c": flowVars.practitionerId,
 		("HealthCloudGA__Reaction__c": ((payload.reaction map $.manifestation.text) joinBy ', ') when (payload.reaction is :array) otherwise payload.reaction) when (payload.reaction != null),
 		"HealthCloudGA__RecordedDate__c": payload.recordedDate as :date default null
 }]]></dw:set-payload>
@@ -534,11 +525,9 @@ payload]]></dw:set-payload>
 %output application/java
 ---
 {
-//	"Account__c": flowVars.ehrPatient.Account__c,
-//	"Patient__c": flowVars.ehrPatient.Id,
+
 	"HealthCloudGA__AppliesDateTime__c": payload.effectiveDateTime as :date default null,
 	"HealthCloudGA__SourceSystemId__c" : payload.identifier[0].value,
-//	"HealthCloudGA__Comments__c": "EPIC Observations",
 	"HealthCloudGA__NameCode__c": payload.code.coding[0].code,
 	"HealthCloudGA__NameLabel__c": payload.code.coding[0].display,
 	"HealthCloudGA__NameSystem__c": payload.code.coding[0].system,
@@ -904,10 +893,8 @@ payload]]></dw:set-payload>
 %output application/java
 ---
 {
-	//"Account__c": flowVars.ehrPatient.Account__c default null,
 	"HealthCloudGA__LengthUnit__c": "min",
 	"HealthCloudGA__LengthValue__c": payload.minutesDuration,
-	//"Patient__c": flowVars.ehrPatient.Id default null,
 	"HealthCloudGA__PeriodEnd__c": payload.end as :datetime default null,
 	"HealthCloudGA__PeriodStart__c": payload.start as :datetime default null,
 	"HealthCloudGA__SourceSystemId__c": payload.identifier[0].value,
@@ -966,10 +953,8 @@ payload]]></dw:set-payload>
 ---
 {
 	"Id" : inboundProperties.'http.uri.params'.id,
-	//"Account__c": flowVars.ehrPatient.Account__c default null,
 	"HealthCloudGA__LengthUnit__c": "min",
 	"HealthCloudGA__LengthValue__c": payload.minutesDuration,
-	//"Patient__c": flowVars.ehrPatient.Id default null,
 	"HealthCloudGA__PeriodEnd__c": payload.end as :datetime default null,
 	"HealthCloudGA__PeriodStart__c": payload.start as :datetime default null,
 	"HealthCloudGA__SourceSystemId__c": payload.identifier[0].value,
