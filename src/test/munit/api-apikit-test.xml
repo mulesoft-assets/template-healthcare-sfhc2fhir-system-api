@@ -57,6 +57,11 @@ response.put("Id","654");
 response.put("Response","success");
 return response;]]></scripting:script>
 
+<scripting:script name="sfdcCandidatePatientResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","987");
+response.put("Response","success");
+return response;]]></scripting:script>
+
 <scripting:script name="sfdcResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
 response.put("Id","000");
 response.put("Response","success");
@@ -716,22 +721,23 @@ payload]]></dw:set-payload>
     </munit:test>
 
     <munit:test name="post:/Patient:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Patient:application/json:healthcare-system-api-config-200-]">
-        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EmrPatient'">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock Create new Candidate Patient'">
             <mock:with-attributes>
-                <mock:with-attribute name="doc:name" whereValue="#['Create new EmrPatient']"/>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new Candidate Patient']"/>
             </mock:with-attributes>
-            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+            <mock:then-return payload="#[resultOfScript('sfdcCandidatePatientResponse')]"/>
 
 
 
         </mock:when>
-        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare create of  the EmrPatient in SFDC'">
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare create of the Candidate Patient in SFDC'">
             <mock:with-attributes>
-                <mock:with-attribute name="doc:name" whereValue="#['Prepare create of  the EmrPatient in SFDC']"/>
+                <mock:with-attribute name="doc:name" whereValue="#['Prepare create of the Candidate Patient in SFDC']"/>
             </mock:with-attributes>
 
+
             <mock:assertions-after-call>
-            	<munit:assert-true message="The EhrPatient Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrPatient Id presence"/>
+            	<munit:assert-true message="The EhrCandidatePatient Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrCandidatePatient Id presence"/>
                 <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Address1City__c.equals(&quot;San Francisco&quot;) &amp;&amp; payload[0].HealthCloudGA__FamilyName1__c.equals(&quot;Radonctest&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
             </mock:assertions-after-call>
         </mock:spy>
