@@ -71,7 +71,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 }]]></dw:set-payload>
         </dw:transform-message>
         <sfdc:update-single config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrPatient__c" doc:name="Update EmrPatient"/>
-        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+
 
         <logger message="Patient with ID #[payload.id] was updated succesfully." level="INFO" doc:name="Log the success"/>
         <dw:transform-message doc:name="Transform response to JSON">
@@ -83,7 +83,7 @@ payload
         </dw:transform-message>
     </flow>
     <flow name="post:/Patient:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of  the EmrPatient in SFDC">
+        <dw:transform-message doc:name="Prepare create of the Candidate Patient in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -111,10 +111,10 @@ payload
 	("HealthCloudGA__BirthDate__c": payload.birthDate as :date) when payload.birthDate != null
 }]]]></dw:set-payload>
         </dw:transform-message>
-        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrPatient__c" doc:name="Create new EmrPatient">
+        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__CandidatePatient__c" doc:name="Create new Candidate Patient">
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
-        <logger message="Patient with ID #[payload.Id] was created succesfully." level="INFO" doc:name="Log the success"/>
+        <logger message="Candidate Patient was created succesfully." level="INFO" doc:name="Log the success"/>
         <dw:transform-message doc:name="Transform response to JSON">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
