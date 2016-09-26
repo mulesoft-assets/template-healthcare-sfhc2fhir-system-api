@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mock="http://www.mulesoft.org/schema/mule/mock" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+	
+    <spring:beans>
+        <spring:import resource="classpath:api.xml" />
+    </spring:beans>
+    
+    <munit:config mock-connectors="false" mock-inbounds="false" doc:name="MUnit configuration"/>
+    
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" basePath="/api" doc:name="HTTP Request Configuration"/>
+    
+    <scripting:script name="sfdcPatientResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","123");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcConditionResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","456");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcAllergyIntoleranceResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","789");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcMedicationOrderResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","147");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcObservationResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","258");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcDeviceResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","369");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcPractitionerResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","321");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcEncounterResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","654");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+<scripting:script name="sfdcResponse" engine="Groovy" doc:name="Script"><![CDATA[Map response = new HashMap();
+response.put("Id","000");
+response.put("Response","success");
+return response;]]></scripting:script>
+
+    <munit:test name="put:/Patient/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/Patient/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Update EmrPatient'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Update EmrPatient']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare update of  the EmrPatient in SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Prepare update of  the EmrPatient in SFDC']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrPatient Id should not be NULL!" condition="#[payload.Id != null]" doc:name="Check EhrPatient Id presence"/>
+                <munit:assert-true condition="#[payload.Id.equals(&quot;123&quot;) &amp;&amp; payload.HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload.HealthCloudGA__Address1City__c.equals(&quot;San Francisco&quot;) &amp;&amp; payload.HealthCloudGA__FamilyName1__c.equals(&quot;Radonctest&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_patient_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/Patient/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json" />
+                <http:uri-param paramName="id" value="123"/>
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="put:/AllergyIntolerance/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/AllergyIntolerance/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Upsert EhrAllergyIntolerances'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Upsert EhrAllergyIntolerances']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcAllergyIntoleranceResponse')]"/>
+
+
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPractitioner from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPractitioner from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPractitionerResponse')]"/>
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrAllergyIntolerances'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrAllergyIntolerances']"/>
+            </mock:with-attributes>
+
+
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrAllergyIntolerance Id should not be NULL!" condition="#[payload[0].Id != null]" doc:name="Check EhrAllergyIntolerance Id presence"/>
+                <munit:assert-true condition="#[payload[0].Id.equals(&quot;789&quot;) &amp;&amp; payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Recorder__c.equals(&quot;321&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_allergyintolerance_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/AllergyIntolerance/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="789"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="put:/Appointment/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/Appointment/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EhrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EhrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Upsert EhrEncounter'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Upsert EhrEncounter']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcEncounterResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor="mule:sub-flow" doc:name="Mock 'deleteObsoleteEncounterParticipants' subflow">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('deleteObsoleteEncounterParticipants')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcResponse')]"/>
+        </mock:when>
+        <mock:when messageProcessor="mule:sub-flow" doc:name="Mock 'createEncounterParticipantSubFlow' subflow">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('createEncounterParticipantSubFlow')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcResponse')]"/>
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrEncounter with ehrPatient'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrEncounter with ehrPatient']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrEncounter Id should not be NULL!" condition="#[payload[0].Id != null]" doc:name="Check EhrEncounter Id presence"/>
+                <munit:assert-true condition="#[payload[0].Id.equals(&quot;654&quot;) &amp;&amp; payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;) &amp;&amp; payload[0].HealthCloudGA__Status__c.equals(&quot;proposed&quot;) &amp;&amp; payload[0].HealthCloudGA__TypeLabel__c.equals(&quot;Regular Check-up&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_appointment_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/Appointment/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="654"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="put:/Condition/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/Condition/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Upsert EhrConditions'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Upsert EhrConditions']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcConditionResponse')]"/>
+
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance the EhrConditions'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance the EhrConditions']"/>
+            </mock:with-attributes>
+
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrCondition Id should not be NULL!" condition="#[payload[0].Id != null]" doc:name="Check EhrCondition Id presence"/>
+                <munit:assert-true condition="#[payload[0].Id.equals(&quot;456&quot;) &amp;&amp; payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__AsserterPatient__c.equals(&quot;Patient/9&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_condition_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/Condition/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="456"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="put:/Practitioner/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/Practitioner/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Update EhrPractitioner'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Update EhrPractitioner']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPractitionerResponse')]"/>
+
+        </mock:when>
+
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare create of the EhrPractitioner in SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Prepare create of the EhrPractitioner in SFDC']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrPractitioner Id should not be NULL!" condition="#[payload[0].Id != null]" doc:name="Check EhrPractitioner Id presence"/>
+                <munit:assert-true condition="#[payload[0].Id.equals(&quot;321&quot;) &amp;&amp; payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Address1City__c.equals(&quot;San Francisco&quot;) &amp;&amp; payload[0].HealthCloudGA__FamilyName1__c.equals(&quot;Fletcher&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_practitioner_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/Practitioner/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="321"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="put:/Device/id:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [put:/Device/id:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Upsert EhrDevice'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Upsert EhrDevice']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcDeviceResponse')]"/>
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrDevice data'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrDevice data']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrDevice Id should not be NULL!" condition="#[payload[0].Id != null]" doc:name="Check EhrDevice Id presence"/>
+                <munit:assert-true condition="#[payload[0].Id.equals(&quot;369&quot;) &amp;&amp; payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;345675&quot;) &amp;&amp; payload[0].HealthCloudGA__Manufacturer__c.equals(&quot;Acme Devices, Inc&quot;) &amp;&amp; payload[0].HealthCloudGA__Model__c.equals(&quot;AB 45-J&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/put_device_{id}_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/Device/{id}" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="369"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="get:/AllergyIntolerance:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/AllergyIntolerance:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrAllergyIntolerance's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrAllergyIntolerance\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcAllergyIntoleranceResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/AllergyIntolerance" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+                <http:query-param paramName="identifier" value="12345"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;AllergyIntolerance&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;789&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+
+    <munit:test name="get:/Appointment:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Appointment:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EhrEncounter's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EhrEncounter\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcEncounterResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Appointment" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Appointment&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;654&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+
+    <munit:test name="get:/Condition:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Condition:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrCondition's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrCondition\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcConditionResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Condition" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="identifier" value="12345"/>
+                <http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Condition&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;456&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+    <munit:test name="get:/Device:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Device:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrDevice's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrDevice\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcDeviceResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Device" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json" />
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Device&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;369&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+
+    <munit:test name="get:/Observation:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Observation:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrObservation's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrObservation\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcObservationResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Observation" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="identifier" value="12345"/>
+                <http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Observation&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;258&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+    <munit:test name="get:/Patient:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Patient:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Patient" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="identifier" value="12345"/>
+                <http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Patient&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+
+    </munit:test>
+    <munit:test name="get:/Practitioner:healthcare-system-api-config-200-application/json-FlowTest" description="Verifying functionality of [get:/Practitioner:healthcare-system-api-config-200-application/json]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPractitioner's Id from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPractitioner\'s Id from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPractitionerResponse')]"/>
+
+        </mock:when>
+        <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/Practitioner" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Accept" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="http response to Java object">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+        <munit:assert-true condition="#[payload.resourceType.equals(&quot;Bundle&quot;) &amp;&amp; payload.total.equals(1) &amp;&amp; payload.entry[0].resource.resourceType.equals(&quot;Practitioner&quot;) &amp;&amp; payload.entry[0].resource.id.equals(&quot;321&quot;)]" doc:name="Check expected data in payload" message="Response payload doesn't contain the expected data!"/>
+    </munit:test>
+
+    <munit:test name="post:/AllergyIntolerance:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/AllergyIntolerance:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPractitioner from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPractitioner from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPractitionerResponse')]"/>
+
+
+
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrAllergyIntolerances'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrAllergyIntolerances']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcAllergyIntoleranceResponse')]"/>
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrAllergyIntolerances'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrAllergyIntolerances']"/>
+            </mock:with-attributes>
+
+
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrAllergyIntolerance Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrAllergyIntolerance Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Recorder__c.equals(&quot;321&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_allergyintolerance_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/AllergyIntolerance" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Appointment:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Appointment:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EhrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EhrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create EhrEncounter'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create EhrEncounter']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcEncounterResponse')]"/>
+
+
+        </mock:when>
+
+        <mock:when messageProcessor="mule:sub-flow" doc:name="Mock 'createEncounterParticipantSubFlow' subflow">
+            <mock:with-attributes>
+                <mock:with-attribute name="name" whereValue="#[matchContains('createEncounterParticipantSubFlow')]"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcResponse')]"/>
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrCondition'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrCondition']"/>
+            </mock:with-attributes>
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrCondition Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrCondition Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;) &amp;&amp; payload[0].HealthCloudGA__Status__c.equals(&quot;proposed&quot;) &amp;&amp; payload[0].HealthCloudGA__TypeLabel__c.equals(&quot;Regular Check-up&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_appointment_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Appointment" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Condition:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Condition:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrConditions'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrConditions']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcConditionResponse')]"/>
+
+
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrCondition'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrCondition']"/>
+            </mock:with-attributes>
+
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrCondition Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrCondition Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__AsserterPatient__c.equals(&quot;Patient/9&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_condition_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Condition" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Device:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Device:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrDevice'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrDevice']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcDeviceResponse')]"/>
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrDevice data'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrDevice data']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrDevice Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrDevice Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;345675&quot;) &amp;&amp; payload[0].HealthCloudGA__Manufacturer__c.equals(&quot;Acme Devices, Inc&quot;) &amp;&amp; payload[0].HealthCloudGA__Model__c.equals(&quot;AB 45-J&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_device_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Device" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/MedicationOrder:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/MedicationOrder:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrMedicationPrescriptions'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrMedicationPrescriptions']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcMedicationOrderResponse')]"/>
+
+
+
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Enhance EhrMedicationPrescription data'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Enhance EhrMedicationPrescription data']"/>
+            </mock:with-attributes>
+
+
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrMedicationOrder Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrMedicationOrder Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__StatusCode__c.equals(&quot;active&quot;) &amp;&amp; payload[0].HealthCloudGA__MedicationName__c.equals(&quot;PALIPERIDONE ER 3 MG TABLET,EXTENDED RELEASE 24 HR&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_medicationorder_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/MedicationOrder" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Observation:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Observation:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get EmrPatient from SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get EmrPatient from SFDC']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Get Device by identifier'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Get Device by identifier']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcDeviceResponse')]"/>
+
+        </mock:when>
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrObservations'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrObservations']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcObservationResponse')]"/>
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Append to Observation'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Append to Observation']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrObservation Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrObservation Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__NameCode__c.equals(&quot;3141-9&quot;) &amp;&amp; payload[0].HealthCloudGA__NameLabel__c.equals(&quot;Weight Measured&quot;) &amp;&amp; payload[0].HealthCloudGA__NameSystem__c.equals(&quot;http://loinc.org&quot;) &amp;&amp; payload[0].HealthCloudGA__Patient__c.equals(&quot;123&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_observation_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Observation" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Patient:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Patient:application/json:healthcare-system-api-config-200-]">
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EmrPatient'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EmrPatient']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPatientResponse')]"/>
+
+
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare create of  the EmrPatient in SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Prepare create of  the EmrPatient in SFDC']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrPatient Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrPatient Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Address1City__c.equals(&quot;San Francisco&quot;) &amp;&amp; payload[0].HealthCloudGA__FamilyName1__c.equals(&quot;Radonctest&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_patient_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Patient" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json" />
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+    <munit:test name="post:/Practitioner:application/json:healthcare-system-api-config-200--FlowTest" description="Verifying functionality of [post:/Practitioner:application/json:healthcare-system-api-config-200-]">
+
+        <mock:when messageProcessor=".*:.*" doc:name="Mock 'Create new EhrPractitioner'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Create new EhrPractitioner']"/>
+            </mock:with-attributes>
+            <mock:then-return payload="#[resultOfScript('sfdcPractitionerResponse')]"/>
+
+        </mock:when>
+        <mock:spy messageProcessor=".*:.*" doc:name="Spy 'Prepare create of the EhrPractitioner in SFDC'">
+            <mock:with-attributes>
+                <mock:with-attribute name="doc:name" whereValue="#['Prepare create of the EhrPractitioner in SFDC']"/>
+            </mock:with-attributes>
+
+            <mock:assertions-after-call>
+            	<munit:assert-true message="The EhrPractitioner Id should be NULL!" condition="#[!payload.contains(&quot;Id&quot;)]" doc:name="Check EhrPractitioner Id presence"/>
+                <munit:assert-true condition="#[payload[0].HealthCloudGA__SourceSystemId__c.equals(&quot;12345&quot;) &amp;&amp; payload[0].HealthCloudGA__Address1City__c.equals(&quot;San Francisco&quot;) &amp;&amp; payload[0].HealthCloudGA__FamilyName1__c.equals(&quot;Fletcher&quot;)]" doc:name="Check expected data in payload" message="Payload doesn't contain the expected data!"/>
+            </mock:assertions-after-call>
+        </mock:spy>
+        <set-payload value="#[getResource('scaffolder/request/post_practitioner_application_json.json').asString()]" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/Practitioner" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+
+            </http:request-builder>
+        </http:request>
+        <object-to-string-transformer doc:name="http response to string" />
+        <munit:assert-true message="The HTTP Status code is not correct!" condition="#[messageInboundProperty('http.status').is(eq(200))]" doc:name="assert that - http.status eq 200" />
+    </munit:test>
+
+</mule>
