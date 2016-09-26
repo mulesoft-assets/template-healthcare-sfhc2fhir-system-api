@@ -408,9 +408,9 @@
                 <isInterface>false</isInterface>
                 <name>Error</name>
                 <parentNames>
+                  <string>java.lang.Object</string>
                   <string>com.sforce.ws.bind.XMLizable</string>
                   <string>com.sforce.soap.partner.IError</string>
-                  <string>java.lang.Object</string>
                 </parentNames>
               </model>
               <isArray>true</isArray>
@@ -485,8 +485,8 @@
         <isInterface>false</isInterface>
         <name>DeleteResult</name>
         <parentNames>
-          <string>com.sforce.ws.bind.XMLizable</string>
           <string>java.lang.Object</string>
+          <string>com.sforce.ws.bind.XMLizable</string>
           <string>com.sforce.soap.partner.IDeleteResult</string>
         </parentNames>
       </org.mule.common.metadata.DefaultPojoMetaDataModel>
@@ -912,9 +912,9 @@
                 <isInterface>false</isInterface>
                 <name>Error</name>
                 <parentNames>
+                  <string>java.lang.Object</string>
                   <string>com.sforce.ws.bind.XMLizable</string>
                   <string>com.sforce.soap.partner.IError</string>
-                  <string>java.lang.Object</string>
                 </parentNames>
               </model>
               <isArray>true</isArray>
@@ -989,9 +989,9 @@
         <isInterface>false</isInterface>
         <name>SaveResult</name>
         <parentNames>
-          <string>com.sforce.ws.bind.XMLizable</string>
-          <string>java.lang.Object</string>
           <string>com.sforce.soap.partner.ISaveResult</string>
+          <string>java.lang.Object</string>
+          <string>com.sforce.ws.bind.XMLizable</string>
         </parentNames>
       </org.mule.common.metadata.DefaultPojoMetaDataModel>
     </entry>
@@ -1441,9 +1441,9 @@
                 <isInterface>false</isInterface>
                 <name>Error</name>
                 <parentNames>
+                  <string>java.lang.Object</string>
                   <string>com.sforce.ws.bind.XMLizable</string>
                   <string>com.sforce.soap.partner.IError</string>
-                  <string>java.lang.Object</string>
                 </parentNames>
               </model>
               <isArray>true</isArray>
@@ -1518,8 +1518,8 @@
         <isInterface>false</isInterface>
         <name>UpsertResult</name>
         <parentNames>
-          <string>com.sforce.ws.bind.XMLizable</string>
           <string>java.lang.Object</string>
+          <string>com.sforce.ws.bind.XMLizable</string>
           <string>com.sforce.soap.partner.IUpsertResult</string>
         </parentNames>
       </org.mule.common.metadata.DefaultPojoMetaDataModel>
