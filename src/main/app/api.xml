@@ -135,7 +135,7 @@ payload
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -443,7 +443,7 @@ payload]]></dw:set-payload>
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -609,7 +609,7 @@ payload]]></dw:set-payload>
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -686,7 +686,7 @@ payload ++  "HealthCloudGA__Patient__c": flowVars.patient.Id
 	type: "searchset",
 	link: [{
 		relation: "self",
-		url: inboundProperties.host ++ inboundProperties."http.request.uri"
+		url: "http://" ++ inboundProperties.host ++ inboundProperties."http.request.uri"
 	}],
 	meta: {
 		lastUpdated: now
@@ -740,7 +740,7 @@ payload ++  "HealthCloudGA__Patient__c": flowVars.patient.Id
 ]
 ]]></dw:set-payload>
         </dw:transform-message>
-        <sfdc:upsert config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrDevice__c" doc:name="Create new EhrDevice" externalIdFieldName="Id">
+        <sfdc:upsert config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrDevice__c" doc:name="Upsert EhrDevice" externalIdFieldName="Id">
             <sfdc:objects ref="#[payload]"/>
 
         </sfdc:upsert>
