@@ -3,6 +3,9 @@
 	"description": "Regular Check-up",
 	"start": "2016-10-28T14:30:00+00:00",
 	"end": "2016-10-28T15:00:00+00:00",
+  "identifier" : [{
+    	"value": "12345"
+   }],
 	"participant": [
 		{
 			"status": "needs-action",

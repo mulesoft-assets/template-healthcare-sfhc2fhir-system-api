@@ -6,6 +6,9 @@
     "asserter": {
       "reference": "Patient/9"
     },
+    "identifier" : [{
+    	"value": "12345"
+    }],
     "code": {
       "coding": [
         {

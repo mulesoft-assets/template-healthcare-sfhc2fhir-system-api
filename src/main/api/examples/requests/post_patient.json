@@ -1,5 +1,8 @@
 {
   "resourceType": "Patient",
+  "identifier" : [{
+    	"value": "12345"
+  }],
   "address": [
     {
       "city": "San Francisco",

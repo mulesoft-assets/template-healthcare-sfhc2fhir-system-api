@@ -1,5 +1,8 @@
 {
 	"resourceType": "AllergyIntolerance",
+  "identifier" : [{
+    	"value": "12345"
+    }],
 	"patient": {
 		"reference": "Patient/9"
 	},
