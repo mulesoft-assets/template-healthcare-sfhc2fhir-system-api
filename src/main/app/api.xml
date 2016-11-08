@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" 
-	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" 
-	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" 
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
 	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
@@ -11,15 +9,14 @@
 	xmlns:http="http://www.mulesoft.org/schema/mule/http" 
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
-http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
     <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="api-config" raml="healthcare-system-api.raml" consoleEnabled="false" doc:name="Router" >
     </apikit:config>
@@ -40,8 +37,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 
 
 
-        <dw:transform-message doc:name="Prepare update of  the EmrPatient in SFDC" metadata:id="862fb0a8-a620-4a2d-9471-3b59a05880ea">
-            <dw:input-payload doc:sample="sample_data\json_4.json"/>
+        <dw:transform-message doc:name="Prepare update of  the EmrPatient in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -83,7 +79,7 @@ payload
         </dw:transform-message>
     </flow>
     <flow name="post:/Patient:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of the Candidate Patient in SFDC">
+        <dw:transform-message doc:name="Prepare create of the (Candidate) Patient in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -110,11 +106,26 @@ payload
 	"HealthCloudGA__Telecom2Value__c": payload.telecom[1].value,
 	("HealthCloudGA__BirthDate__c": payload.birthDate as :date) when payload.birthDate != null
 }]]]></dw:set-payload>
+            <dw:set-variable variableName="activeVar"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.active]]></dw:set-variable>
         </dw:transform-message>
-        <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__CandidatePatient__c" doc:name="Create new Candidate Patient">
-            <sfdc:objects ref="#[payload]"/>
-        </sfdc:create>
-        <logger message="Candidate Patient was created succesfully." level="INFO" doc:name="Log the success"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.activeVar !=null &amp;&amp; flowVars.activeVar == 'true']">
+                <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__EhrPatient__c" doc:name="Create Patient">
+                    <sfdc:objects ref="#[payload]"/>
+                </sfdc:create>
+                <logger message="Patient was created succesfully." level="INFO" doc:name="Log the success"/>
+            </when>
+            <otherwise>
+                <sfdc:create config-ref="Salesforce__Basic_Authentication" type="HealthCloudGA__CandidatePatient__c" doc:name="Create new Candidate Patient">
+                    <sfdc:objects ref="#[payload]"/>
+                </sfdc:create>
+                <logger message="Candidate Patient was created succesfully." level="INFO" doc:name="Log the success"/>
+            </otherwise>
+        </choice>
+
         <dw:transform-message doc:name="Transform response to JSON">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
@@ -304,8 +315,7 @@ payload]]></dw:set-payload>
     </flow>
     
     <flow name="post:/AllergyIntolerance:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of the EhrAllergyIntolerance in SFDC" metadata:id="8a5ae8fe-500a-406f-a166-8086610cd611">
-            <dw:input-payload doc:sample="sample_data\json_2.json"/>
+        <dw:transform-message doc:name="Prepare create of the EhrAllergyIntolerance in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -756,7 +766,7 @@ payload ++  "HealthCloudGA__Patient__c": flowVars.patient.Id
     
     
     <flow name="post:/Practitioner:application/json:api-config">
-        <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC" metadata:id="e4f3977a-4470-425f-aacb-99ca6e5c5ca2">
+        <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
