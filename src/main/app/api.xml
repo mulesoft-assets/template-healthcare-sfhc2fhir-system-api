@@ -22,7 +22,9 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
     <apikit:config name="api-config" raml="healthcare-system-api.raml" consoleEnabled="false" doc:name="Router" >
     </apikit:config>
     <context:property-placeholder location="common.properties, mule.${mule.env}.properties"/>
-    <sfdc:config name="Salesforce__Basic_Authentication" username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.token}" doc:name="Salesforce: Basic Authentication" disableSessionInvalidation="true"/>
+    <sfdc:config name="Salesforce__Basic_Authentication" username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.token}" doc:name="Salesforce: Basic Authentication" disableSessionInvalidation="true">
+        <reconnect/>
+    </sfdc:config>
     <validation:config name="Validation_Configuration" doc:name="Validation Configuration"/>
     
     <flow name="api-main">
