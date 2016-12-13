@@ -662,7 +662,7 @@ payload]]></dw:set-payload>
 	HealthCloudGA__Manufacturer__c   : payload.manufacturer,
 	HealthCloudGA__Model__c          : payload.model,
 	HealthCloudGA__Type__c           : payload.type.text,	
-	HealthCloudGA__SourceSystemId__c : payload.identifier[0].value,
+	HealthCloudGA__SourceSystemId__c : payload.id,
 	HealthCloudGA__Contact__c        : payload.contact[0].value	
 }
 ]]></dw:set-payload>
@@ -735,7 +735,7 @@ payload ++  HealthCloudGA__Patient__c: flowVars.patient.Id
 	HealthCloudGA__Manufacturer__c   : payload.manufacturer,
 	HealthCloudGA__Model__c          : payload.model,
 	HealthCloudGA__Type__c           : payload.type.text,	
-	HealthCloudGA__SourceSystemId__c : payload.identifier[0].value,
+	HealthCloudGA__SourceSystemId__c : payload.id,
 	HealthCloudGA__Contact__c        : payload.contact[0].value	
 }
 ]]></dw:set-payload>
