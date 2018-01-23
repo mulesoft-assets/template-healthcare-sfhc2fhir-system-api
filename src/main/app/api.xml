@@ -42,6 +42,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 
 
         <dw:transform-message doc:name="Prepare update of  the EhrPatient in SFHC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -84,6 +85,7 @@ payload
     </flow>
     <flow name="post:/Patient:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the Ehr(Candidate) Patient in SFHC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -186,6 +188,7 @@ payload
     <flow name="put:/Condition/{id}:application/json:api-config">
 
         <dw:transform-message doc:name="Prepare create of the EhrConditions in SHDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -276,6 +279,7 @@ payload]]></dw:set-payload>
     <flow name="post:/Condition:application/json:api-config">
 
         <dw:transform-message doc:name="Prepare create of the EhrConditions in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -334,6 +338,7 @@ payload]]></dw:set-payload>
     <flow name="post:/AllergyIntolerance:application/json:api-config">
 
         <dw:transform-message doc:name="Prepare create of the EhrAllergyIntolerance in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -397,6 +402,7 @@ payload]]></dw:set-payload>
 	<flow name="put:/AllergyIntolerance/{id}:application/json:api-config">
 
 	    <dw:transform-message doc:name="Prepare create of the EhrAllergyIntolerance in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -491,6 +497,7 @@ payload]]></dw:set-payload>
 
     <flow name="post:/MedicationOrder:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the EhrMedicationPrescriptions in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -547,6 +554,7 @@ payload]]></dw:set-payload>
     </flow>
     <flow name="post:/Observation:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the EhrObservations in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -655,6 +663,7 @@ payload]]></dw:set-payload>
     
     <flow name="post:/Device:application/json:api-config">
 <dw:transform-message doc:name="Prepare create of the EhrDevice in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -727,6 +736,7 @@ payload ++  HealthCloudGA__Patient__c: flowVars.patient.Id
     <flow name="put:/Device/{id}:application/json:api-config">
 
     <dw:transform-message doc:name="Prepare create of the EhrDevice in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -773,6 +783,7 @@ payload ++  HealthCloudGA__Patient__c: flowVars.patient.Id
     
     <flow name="post:/Practitioner:application/json:api-config">
         <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -823,6 +834,7 @@ payload]]></dw:set-payload>
     </flow>
     <flow name="put:/Practitioner/{id}:application/json:api-config">
      <dw:transform-message doc:name="Prepare create of the EhrPractitioner in SFDC">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
