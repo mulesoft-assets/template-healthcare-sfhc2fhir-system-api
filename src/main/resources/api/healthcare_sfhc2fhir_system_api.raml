@@ -391,6 +391,38 @@ traits:
    post:
      is: [ devicePOSTSearch ]
 
+/MedicationRequest:
+ type: {fhirResourceType: {
+      postExample : !include /examples/requests/post_medicationRequest.json,
+      getExample  : !include /examples/responses/get_medicationRequest.json,
+    }
+  }
+ get:
+   is: [ medicationRequestSearch ]
+ put:
+   is: [ medicationRequestSearch, conditionalOperation ]
+ delete:
+   is: [ medicationRequestSearch, conditionalOperation ]
+ /_history:
+   type: { fhirHistory: { bundleName: FHIR_bundle_types.MedicationRequestBundle } }
+   is: [ medicationRequestSearch ]
+ /{id}:
+   type: {fhirResource: {
+        getSingleExample: !include /examples/responses/get_medicationRequest_id.json,
+        putExample: !include /examples/requests/put_medicationRequest_id.json
+      }
+    }
+   /_history:
+     type: { fhirHistory: { bundleName: FHIR_bundle_types.MedicationRequestBundle } }
+     /{vid}:
+       type: { fhirVersionedResource: { resourceName: MedicationRequest } }
+ /_search:
+   type: { fhirSearch: { bundleName: FHIR_bundle_types.MedicationRequestBundle } }
+   get:
+     is: [ medicationRequestSearch ]
+   post:
+     is: [ medicationRequestPOSTSearch ]
+
 /Observation:
  type: {fhirResourceType: {
       postExample : !include /examples/requests/post_observation.json,
