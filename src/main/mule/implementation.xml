@@ -54,8 +54,7 @@ payload.active]]></ee:set-variable>
 		<choice doc:name="Is patient active ?" doc:id="99ba8b1f-50e2-42d2-8a2c-cc96c8497049">
 			<when expression="#[vars.active == true]">
 				<salesforce:query-single doc:name="Check for Candidate Patients Account"
-					doc:id="4ab80854-aa5e-468a-9447-681cfa42532a" config-ref="Salesforce_Config"
-					target="accountId">
+					doc:id="4ab80854-aa5e-468a-9447-681cfa42532a" config-ref="Salesforce_Config">
 					<salesforce:salesforce-query>SELECT HealthCloudGA__AccountId__c
 						FROM HealthCloudGA__CandidatePatient__c WHERE
 						HealthCloudGA__SourceSystemId__c = ':id' AND
@@ -69,7 +68,7 @@ payload.active]]></ee:set-variable>
 				</salesforce:query-single>
 				<validation:is-not-null
 					doc:name="Validate if Candidate Patient was converted in SFHC"
-					doc:id="d17b93be-f45c-4cd5-949f-86ec262a7299" value="vars.accountId.HealthCloudGA__AccountId__c"
+					doc:id="d17b93be-f45c-4cd5-949f-86ec262a7299" value="#[payload.HealthCloudGA__AccountId__c]"
 					message="Could not create EhrPatient. Inconsistent state of Candidate Patient - converted Candidate Patient must have associated Account." config-ref="Validation_Config"/>
 				<ee:transform doc:name="Enhance patient with account id"
 					doc:id="e0827cd0-d5c1-471d-bf68-852d35f76feb">
@@ -78,7 +77,7 @@ payload.active]]></ee:set-variable>
 output application/java
 ---
 [
-	vars.patient[0] ++ HealthCloudGA__Account__c: vars.accountId.HealthCloudGA__AccountId__c
+	vars.patient[0] ++ HealthCloudGA__Account__c: payload.HealthCloudGA__AccountId__c
 ]]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -757,7 +756,7 @@ output application/java
 			target="patient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Name__c,
 				HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -1251,7 +1250,7 @@ payload.id]]></ee:set-variable>
 			target="ehrPatient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Account__c
 				FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -1336,7 +1335,7 @@ attributes.uriParams.id]]></ee:set-variable>
 			target="ehrPatient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Account__c
 				FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -1448,7 +1447,7 @@ output application/json
 			target="sfdcPractitionerId">
 			<salesforce:salesforce-query>SELECT Id FROM
 				HealthCloudGA__EhrPractitioner__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'
+				HealthCloudGA__SourceSystemId__c = ':id'
 			</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
@@ -1463,8 +1462,8 @@ output application/json
 output application/java
 ---
 [{
-	HealthCloudGA__Encounter__c    : vars.sfdcEncounterId,
-	HealthCloudGA__Practitioner__c : vars.sfdcPractitionerId
+	HealthCloudGA__Encounter__c    : vars.sfdcEncounterId.Id,
+	HealthCloudGA__Practitioner__c : vars.sfdcPractitionerId.Id
 }]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1478,6 +1477,7 @@ output application/java
 		<salesforce:query
 			doc:name="Get obsolete EhrEncounterParticipant IDs from SFHC "
 			doc:id="a1e17b21-cb0b-45fb-a96b-947c8fbc62af" config-ref="Salesforce_Config">
+			<ee:repeatable-file-store-iterable />
 			<salesforce:salesforce-query>SELECT Id FROM
 				HealthCloudGA__EhrEncounterParticipant__c WHERE
 				HealthCloudGA__Encounter__c = ':id'
@@ -1490,7 +1490,7 @@ output application/java
 		</salesforce:query>
 		<salesforce:delete doc:name="Delete obsolete EhrEncounterParticipants"
 			doc:id="6618533f-4166-4684-b9e9-21ab3bcd85b2" config-ref="Salesforce_Config">
-			<salesforce:delete-ids><![CDATA[#[if (sizeOf(payload) != 0) payload else []]]]></salesforce:delete-ids>
+			<salesforce:delete-ids><![CDATA[#[if (sizeOf(payload) > 0) payload.Id else []]]]></salesforce:delete-ids>
 		</salesforce:delete>
 	</sub-flow>
 </mule>
