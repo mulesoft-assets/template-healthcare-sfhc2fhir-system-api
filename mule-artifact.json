@@ -66,7 +66,6 @@
         "api\\queryParams\\resources\\appointmentParams.yaml",
         "api\\queryParams\\resources\\conditionParams.yaml",
         "api\\queryParams\\resources\\deviceParams.yaml",
-        "api\\queryParams\\resources\\encounterParams.yaml",
         "api\\queryParams\\resources\\medicationRequestParams.yaml",
         "api\\queryParams\\resources\\observationParams.yaml",
         "api\\queryParams\\resources\\patientParams.yaml",
