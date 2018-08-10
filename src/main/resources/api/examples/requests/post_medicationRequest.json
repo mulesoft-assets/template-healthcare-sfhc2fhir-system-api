@@ -7,9 +7,7 @@
     "intent": "proposal",
     "dosageInstruction": [
       {
-        "text": "Take 3 mg by mouth Daily."
-      },
-      {
+        "text": "Take 3 mg by mouth Daily.",
         "doseQuantity": {
           "value": 3,
           "unit": "mg",

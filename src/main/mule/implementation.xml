@@ -10,6 +10,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
 
+
 	<flow name="createPatient" doc:id="546c1344-3dc8-43f5-862a-30bc95b37fca">
 		<ee:transform doc:name="Prepare data for Ehr(Candidate) Patient in SFHC"
 			doc:id="ff99689a-cd8e-4778-8cd3-e1c68db2825b">
@@ -17,7 +18,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="patient"><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
 [{
 	HealthCloudGA__SourceSystemId__c      : payload.identifier[0].value,
@@ -42,7 +43,7 @@ output application/json
 	HealthCloudGA__Telecom1Value__c       : payload.telecom[0].value,
 	HealthCloudGA__Telecom2Use__c         : payload.telecom[1].use,
 	HealthCloudGA__Telecom2Value__c       : payload.telecom[1].value,
-	(HealthCloudGA__BirthDate__c          : (payload.birthDate ++ "T00:00:00") as DateTime) if (payload.birthDate != null)
+	(HealthCloudGA__BirthDate__c          : (payload.birthDate) as Date) if (payload.birthDate != null)
 }]]]></ee:set-variable>
 				<ee:set-variable variableName="active"><![CDATA[%dw 2.0
 output application/java
@@ -53,8 +54,7 @@ payload.active]]></ee:set-variable>
 		<choice doc:name="Is patient active ?" doc:id="99ba8b1f-50e2-42d2-8a2c-cc96c8497049">
 			<when expression="#[vars.active == true]">
 				<salesforce:query-single doc:name="Check for Candidate Patients Account"
-					doc:id="4ab80854-aa5e-468a-9447-681cfa42532a" config-ref="Salesforce_Config"
-					target="accountId">
+					doc:id="4ab80854-aa5e-468a-9447-681cfa42532a" config-ref="Salesforce_Config">
 					<salesforce:salesforce-query>SELECT HealthCloudGA__AccountId__c
 						FROM HealthCloudGA__CandidatePatient__c WHERE
 						HealthCloudGA__SourceSystemId__c = ':id' AND
@@ -68,8 +68,8 @@ payload.active]]></ee:set-variable>
 				</salesforce:query-single>
 				<validation:is-not-null
 					doc:name="Validate if Candidate Patient was converted in SFHC"
-					doc:id="d17b93be-f45c-4cd5-949f-86ec262a7299" value="vars.accountId.HealthCloudGA__AccountId__c"
-					message="Could not create EhrPatient. Inconsistent state of Candidate Patient - converted Candidate Patient must have associated Account." />
+					doc:id="d17b93be-f45c-4cd5-949f-86ec262a7299" value="#[payload.HealthCloudGA__AccountId__c]"
+					message="Could not create EhrPatient. Inconsistent state of Candidate Patient - converted Candidate Patient must have associated Account." config-ref="Validation_Config"/>
 				<ee:transform doc:name="Enhance patient with account id"
 					doc:id="e0827cd0-d5c1-471d-bf68-852d35f76feb">
 					<ee:message>
@@ -77,18 +77,18 @@ payload.active]]></ee:set-variable>
 output application/java
 ---
 [
-	vars.patient[0] 
-	++ 
-	HealthCloudGA__Account__c: vars.accountId.HealthCloudGA__AccountId__c
+	vars.patient[0] ++ HealthCloudGA__Account__c: payload.HealthCloudGA__AccountId__c
 ]]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="c16b82d9-a174-4b5d-8a13-4da541c06f67" message="#[output application/json --- payload]"/>
 				<salesforce:create type="HealthCloudGA__EhrPatient__c"
 					doc:name="Create new Ehr Patient" doc:id="93640efb-0001-493a-bc75-1e2fa1fdb26b"
 					config-ref="Salesforce_Config">
 				</salesforce:create>
 			</when>
 			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="ad10e15d-fea0-4323-b390-09b6b4f16973" message="#[output application/json --- vars.patient]"/>
 				<salesforce:create doc:name="Create new Candidate Patient"
 					doc:id="93640efb-0001-493a-bc75-1e2fa1fdb26b" config-ref="Salesforce_Config"
 					type="HealthCloudGA__CandidatePatient__c">
@@ -111,10 +111,10 @@ payload]]></ee:set-payload>
 			doc:id="ff99689a-cd8e-4778-8cd3-e1c68db2825b">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
-[{
-	"Id"									 : attributes.uriParams.id,
+{
+	Id									 : attributes.uriParams.id,
 	HealthCloudGA__SourceSystemId__c      : payload.identifier[0].value,
 	HealthCloudGA__Address1City__c        : payload.address[0].city,
 	HealthCloudGA__Address1Country__c     : payload.address[0].country,
@@ -138,11 +138,12 @@ output application/json
 	HealthCloudGA__Telecom2Use__c         : payload.telecom[1].use,
 	HealthCloudGA__Telecom2Value__c       : payload.telecom[1].value,
 	(HealthCloudGA__BirthDate__c          : payload.birthDate as Date) if (payload.birthDate != null)
-}]]]></ee:set-payload>
+}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 			</ee:variables>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="67804e92-66aa-47ff-9cd0-660d9e73bd5f" message="#[output application/json --- payload]"/>
 		<salesforce:update-single type="HealthCloudGA__EhrPatient__c"
 			doc:name="Update Ehr patient" doc:id="6d57b365-31ba-49d6-943b-dc5df44ad767"
 			config-ref="Salesforce_Config" />
@@ -178,6 +179,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="b974f2e0-3f48-4fda-bc68-f2fa500e9856" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build patient bundle response"
 			doc:id="e661de66-d047-4db8-9514-baf1c923db24">
 			<ee:message>
@@ -211,7 +213,7 @@ output application/json
 			doc:id="2a4e440b-1c77-4852-a07f-6217955040df">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
 {
 	HealthCloudGA__SourceSystemId__c       : payload.identifier[0].value,
@@ -220,7 +222,7 @@ output application/json
 	HealthCloudGA__CodeLabel__c            : payload.code.coding[0].display,
 	HealthCloudGA__CodeSystem__c           : payload.code.coding[0].system,
 	HealthCloudGA__Code__c                 : payload.code.coding[0].code,
-	HealthCloudGA__DateAsserted__c         : null,
+	HealthCloudGA__DateAsserted__c         : payload.onsetDateTime as Date,
 	HealthCloudGA__StatusCode__c           : payload.verificationStatus,
 	HealthCloudGA__AsserterPatient__c      : 
         if (payload.asserter.reference startsWith "Patient") 
@@ -237,7 +239,7 @@ output application/json
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.subject.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.subject.reference splitBy("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
@@ -267,6 +269,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ee15a163-8633-4792-893a-3bdb4a2184d7" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrCondition__c"
 			doc:name="Create new EhrConditions" doc:id="ce2981db-86c5-4804-b321-b24bda2bfb81"
 			config-ref="Salesforce_Config" />
@@ -311,7 +314,7 @@ output application/java
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.patient.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.subject.reference splitBy("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
@@ -341,6 +344,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4c49a4bf-4ed8-447f-b036-9f4deb3b8eaf" message="#[output application/json --- payload]"/>
 		<salesforce:upsert doc:name="Upsert Ehr Condition"
 			doc:id="ece93244-f89e-45d2-a724-e7d87a61a1f7" config-ref="Salesforce_Config"
 			externalIdFieldName="Id" type="HealthCloudGA__EhrCondition__c" />
@@ -358,11 +362,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="1269c96b-7f96-438b-b849-81f745a53f65">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -382,6 +381,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="a08073a2-a4ed-4be0-a211-aba6363f9950" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build condition bundle response"
 			doc:id="2a612ea4-b1be-47b5-8144-e5885ea2ca4d">
 			<ee:message>
@@ -422,27 +422,29 @@ output application/java
 ---
 {
 		HealthCloudGA__SourceSystemId__c   : payload.identifier[0].value,
-		HealthCloudGA__RecorderName__c     : payload.reporter.display,
+		HealthCloudGA__RecorderName__c     : payload.recorder.display,
 		HealthCloudGA__CriticalityLabel__c : payload.criticality,
-		HealthCloudGA__SubstanceLong__c    : payload.substance.coding[0].display,	
-		HealthCloudGA__Substance255__c     : payload.substance.coding[0].display,
-		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation.text) joinBy ', ')  else payload.reaction) if (payload.reaction != null),
+		(HealthCloudGA__SubstanceLong__c    : if (payload.reaction is Array) ((payload.reaction map $.substance.coding[0].display) joinBy (","))  else payload.reaction) if (payload.reaction != null),	
+		(HealthCloudGA__Substance255__c     : if (payload.reaction is Array) ((payload.reaction map $.substance.coding[0].display) joinBy (","))  else payload.reaction) if (payload.reaction != null),
+		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation[0].text) joinBy (","))  else payload.reaction) if (payload.reaction != null),
 		HealthCloudGA__RecordedDate__c     : payload.assertedDate as Date default null
 }]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="reporter"><![CDATA[%dw 2.0
-output application/java
----
-if (payload.reporter != null)
-{
-	number : (payload.reporter.reference splitBy '/')[-1],
-	"type" : (payload.reporter.reference splitBy '/')[0]
-}  else null]]></ee:set-variable>
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.patient.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.patient.reference splitBy('/'))[-1]
+]]></ee:set-variable>
+				<ee:set-variable variableName="recorder" ><![CDATA[%dw 2.0
+output application/java
+---
+if (payload.recorder != null)
+{
+	number : (payload.recorder.reference splitBy('/'))[-1],
+	"type" : (payload.recorder.reference splitBy('/'))[0]
+}  else null
+]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
@@ -466,7 +468,7 @@ output application/java
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
-	"number" : vars.reporter.number
+	"number" : vars.recorder.number
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
 		<ee:transform doc:name="Enhance EhrAllergyIntolerancies"
@@ -483,7 +485,9 @@ output application/java
 	}			
 ]]]></ee:set-payload>
 			</ee:message>
+						
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="91d2b9c0-a31b-4766-9390-f640155bd446" message="#[output application/json --- payload]"/>
 		<salesforce:create doc:name="Create Ehr AllergyIntolerance"
 			doc:id="cd04a654-84ea-445d-95b4-41c43e199027" config-ref="Salesforce_Config"
 			type="HealthCloudGA__EhrAllergyIntolerance__c" />
@@ -508,14 +512,32 @@ output application/java
 {
 		Id                                 : attributes.uriParams.id,
 		HealthCloudGA__SourceSystemId__c   : payload.identifier[0].value,
-		HealthCloudGA__RecorderName__c     : payload.reporter.display,
+		HealthCloudGA__RecorderName__c     : payload.recorder.display,
 		HealthCloudGA__CriticalityLabel__c : payload.criticality,
-		HealthCloudGA__SubstanceLong__c    : payload.substance.coding[0].display,	
-		HealthCloudGA__Substance255__c     : payload.substance.coding[0].display,
-		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation.text) joinBy ', ')  else payload.reaction) if (payload.reaction != null),
+		HealthCloudGA__SubstanceLong__c    : payload.reaction[0].substance.coding[0].display,	
+		HealthCloudGA__Substance255__c     : payload.reaction[0].substance.coding[0].display,
+		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation[0].text) joinBy (","))  else payload.reaction) if (payload.reaction != null),
 		HealthCloudGA__RecordedDate__c     : payload.assertedDate as Date default null
-}]]></ee:set-payload>
+}
+
+]]></ee:set-payload>
 			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
+output application/java
+---
+(payload.patient.reference splitBy('/'))[-1]
+]]></ee:set-variable>
+				<ee:set-variable variableName="recorder" ><![CDATA[%dw 2.0
+output application/java
+---
+if (payload.recorder != null)
+{
+	number : (payload.recorder.reference splitBy('/'))[-1],
+	"type" : (payload.recorder.reference splitBy('/'))[0]
+}  else null
+]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
 			doc:id="a00caf7e-5c73-4dcc-ba8c-a83c86272502" config-ref="Salesforce_Config"
@@ -538,7 +560,7 @@ output application/java
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
-	"number" : vars.reporter.number
+	"number" : vars.recorder.number
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
 		<ee:transform doc:name="Enhance EhrAllergyIntolerancies"
@@ -556,6 +578,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1840a837-7877-48a5-8a9c-baa74ae60155" message="#[output application/json --- payload]"/>
 		<salesforce:upsert doc:name="Upsert EhrAllergyIntolerances"
 			doc:id="623ce252-3180-4569-99f6-5e5b8370e6f4" config-ref="Salesforce_Config"
 			externalIdFieldName="Id" type="HealthCloudGA__EhrAllergyIntolerance__c" />
@@ -573,11 +596,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="a6da84b7-85c8-492c-83fd-106def63948b">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -597,6 +615,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="bfd44bf9-2d85-47b4-9757-b8897f7228b5" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build AllergyIntolerance bundle response"
 			doc:id="6c01cea2-ff25-42a9-8461-21d6649fa68f">
 			<ee:message>
@@ -646,16 +665,16 @@ output application/java
 	HealthCloudGA__MedicationCodeSystem__c         : payload.medicationCodeableConcept.coding[1].system,
 	HealthCloudGA__MedicationCode__c               : payload.medicationCodeableConcept.coding[1].code,
 	HealthCloudGA__MedicationName__c               : payload.medicationCodeableConcept.text,
-	HealthCloudGA__PrescriberName__c               : payload.prescriber.display,
+	HealthCloudGA__PrescriberName__c               : payload.recorder.display,
 	HealthCloudGA__StatusCode__c                   : payload.status,
-	HealthCloudGA__ReasonCode__c                   : payload.reasonCodeableConcept.coding.display
+	HealthCloudGA__ReasonCode__c                   : payload.reasonCode.coding[0].display
 }]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.patient.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.subject.reference splitBy("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
@@ -684,6 +703,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="88a1a4af-537f-486e-8187-740269449225" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrMedicationPrescription__c"
 			doc:name="Create new EhrMedicationPrescriptions" doc:id="f3ae9930-cc4c-4daa-a5b1-0f851c394a13"
 			config-ref="Salesforce_Config" />
@@ -724,11 +744,11 @@ output application/java
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.subject.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.subject.reference splitBy ("/"))[-1]]]></ee:set-variable>
 				<ee:set-variable variableName="deviceId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.device.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.device.reference splitBy ("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
@@ -736,7 +756,7 @@ output application/java
 			target="patient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Name__c,
 				HealthCloudGA__Account__c FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -774,13 +794,14 @@ output application/java
 [
 	payload ++  
 	{
-		HealthCloudGA__Account__c: flowVars.patient.HealthCloudGA__Account__c,
-		HealthCloudGA__Patient__c: flowVars.patient.Id,
-		HealthCloudGA__Device__c : flowVars.device.Id
+		HealthCloudGA__Account__c: vars.patient.HealthCloudGA__Account__c,
+		HealthCloudGA__Patient__c: vars.patient.Id,
+		HealthCloudGA__Device__c : vars.device.Id
 	}
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="60aec0ad-1da6-4b04-adfb-e61659ed6196" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrObservation__c"
 			doc:name="Create new EhrObservations" doc:id="721aa966-046c-4e5a-9936-7bcc23438414"
 			config-ref="Salesforce_Config">
@@ -800,11 +821,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="91a1ae10-4941-41cc-8c74-481f5396a843">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -824,6 +840,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="3fa0ed91-11d8-4b98-9fcc-20325e27a357" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build Observation bundle response"
 			doc:id="6c01cea2-ff25-42a9-8461-21d6649fa68f">
 			<ee:message>
@@ -874,7 +891,7 @@ output application/java
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.patient.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.patient.reference splitBy ("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC"
@@ -896,10 +913,13 @@ output application/java
 output application/java
 ---
 [
-	payload ++  HealthCloudGA__Patient__c: vars.patient.Id			
+	payload ++  {
+		HealthCloudGA__Patient__c: vars.patient.Id
+	}			
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ca5bb3b1-4dbc-4e8c-928f-7357a99260ee" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrDevice__c"
 			doc:name="Create EhrDevice in SFHC" doc:id="a9d5cc28-6fec-424f-b2e2-c2234a937d68"
 			config-ref="Salesforce_Config" />
@@ -933,7 +953,7 @@ output application/java
 				<ee:set-variable variableName="patientId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.patient.reference splitBy "/")[-1]]]></ee:set-variable>
+(payload.patient.reference splitBy ("/"))[-1]]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC"
@@ -959,6 +979,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="fee23a88-58cc-4055-8a3e-2996e6b1ca8b" message="#[output application/json --- payload]"/>
 		<salesforce:upsert type="HealthCloudGA__EhrDevice__c"
 			doc:name="Upsert EhrDevice in SFHC" doc:id="1dda6df7-6aa8-4260-aaa0-98493f9e2b6d"
 			config-ref="Salesforce_Config" externalIdFieldName="Id" />
@@ -976,11 +997,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="af2f0fc2-7058-49c2-88e3-f1f38589c907">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -1000,6 +1016,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="31ce050b-6c14-4b39-8d45-8eef46626fc3" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build Device bundle response"
 			doc:id="6c01cea2-ff25-42a9-8461-21d6649fa68f">
 			<ee:message>
@@ -1036,7 +1053,7 @@ output application/json
 			doc:id="0bba90c6-ad12-45ad-96b3-11f06edac908">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
 [{
 	HealthCloudGA__Address1City__c      : payload.address[0].city,
@@ -1055,8 +1072,6 @@ output application/json
         if (payload.name[0].family[0] != null) (payload.name[0].family[0]) else "",
 	HealthCloudGA__PrefixName1__c       : payload.name[0].prefix[0],
 	HealthCloudGA__SourceSystemId__c    : payload.identifier[0].value,
-//	HealthCloudGA__SpecialtyCode__c     : payload.practitionerRole[0].specialty[0].coding[0].code,
-//	HealthCloudGA__SpecialtySystem__c   : payload.practitionerRole[0].specialty[0].coding[0].system,
 	HealthCloudGA__SuffixName1__c       : payload.name[0].suffix[0],
 	HealthCloudGA__Telecom1Use__c       : (payload.telecom filter $.system == "phone")[0].use,
 	HealthCloudGA__Telecom1Value__c     : (payload.telecom filter $.system == "phone")[0].value,
@@ -1071,6 +1086,7 @@ output application/json
 }]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="76d81dbc-6820-4fd2-87e7-a52fc8a02229" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrPractitioner__c"
 			doc:name="Create EhrPractitioner in SFHC" doc:id="2680c2dd-0456-4b7b-8805-fa67ed21b4cd"
 			config-ref="Salesforce_Config" />
@@ -1089,7 +1105,7 @@ payload]]></ee:set-payload>
 			doc:id="0bba90c6-ad12-45ad-96b3-11f06edac908">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
 [{
 	Id									: attributes.uriParams.id,
@@ -1109,8 +1125,6 @@ output application/json
         if (payload.name[0].family[0] != null) (payload.name[0].family[0]) else "",
 	HealthCloudGA__PrefixName1__c       : payload.name[0].prefix[0],
 	HealthCloudGA__SourceSystemId__c    : payload.identifier[0].value,
-	HealthCloudGA__SpecialtyCode__c     : payload.practitionerRole[0].specialty[0].coding[0].code,
-	HealthCloudGA__SpecialtySystem__c   : payload.practitionerRole[0].specialty[0].coding[0].system,
 	HealthCloudGA__SuffixName1__c       : payload.name[0].suffix[0],
 	HealthCloudGA__Telecom1Use__c       : (payload.telecom filter $.system == "phone")[0].use,
 	HealthCloudGA__Telecom1Value__c     : (payload.telecom filter $.system == "phone")[0].value,
@@ -1125,9 +1139,8 @@ output application/json
 }]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<salesforce:upsert doc:name="Update EhrPractitioner"
-			doc:id="72b5bf12-a135-4889-9720-f0ac34e1b427" config-ref="Salesforce_Config"
-			externalIdFieldName="Id" type="HealthCloudGA__EhrPractitioner__c" />
+		<logger level="INFO" doc:name="Logger" doc:id="6e1f7825-2556-4075-ae25-5c8f8c1bf1e6" message="#[output application/json --- payload]"/>
+		<salesforce:update doc:name="Update EhrPractitioner" doc:id="f98314c7-c642-49ea-874f-d103b36cbe9e" config-ref="Salesforce_Config" type="HealthCloudGA__EhrPractitioner__c"/>
 		<ee:transform doc:name="Build response"
 			doc:id="43058efc-77bc-4987-a6c9-e3db791c80b3">
 			<ee:message>
@@ -1143,11 +1156,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="af2f0fc2-7058-49c2-88e3-f1f38589c907">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -1167,6 +1175,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="c71db302-91af-49f1-be21-4dd4c7cbfaef" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build Practitioner bundle response"
 			doc:id="6c01cea2-ff25-42a9-8461-21d6649fa68f">
 			<ee:message>
@@ -1221,14 +1230,14 @@ output application/java
 ---
 using (practitionerRef = (payload.participant.actor.reference filter ($ startsWith "Practitioner"))[0])
 {
-	"participantId":  (practitionerRef splitBy "/")[-1] default ""
+	"participantId":  (practitionerRef splitBy("/"))[-1] default ""
 }]]></ee:set-variable>
 				<ee:set-variable variableName="patient"><![CDATA[%dw 2.0
 output application/java
 ---
 using (patientRef = (payload.participant.actor.reference filter ($ startsWith "Patient"))[0])
 {
-	"participantId":  (patientRef splitBy "/")[-1] default ""
+	"participantId":  (patientRef splitBy("/"))[-1] default ""
 }]]></ee:set-variable>
 				<ee:set-variable variableName="appointmentId"><![CDATA[%dw 2.0
 output application/java
@@ -1241,7 +1250,7 @@ payload.id]]></ee:set-variable>
 			target="ehrPatient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Account__c
 				FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -1262,6 +1271,7 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7fd07ee5-f1dc-4a20-8471-2b228b76d0c8" message="#[output application/json --- payload]"/>
 		<salesforce:create type="HealthCloudGA__EhrEncounter__c"
 			doc:name="Create EhrEncounter in SFHC" doc:id="6879ca4a-a49f-41e1-88cf-63397f5b9a3a"
 			config-ref="Salesforce_Config" />
@@ -1301,14 +1311,14 @@ output application/java
 ---
 using (practitionerRef = (payload.participant.actor.reference filter ($ startsWith "Practitioner"))[0])
 {
-	"participantId":  (practitionerRef splitBy "/")[-1] default ""
+	"participantId":  (practitionerRef splitBy ("/"))[-1] default ""
 }]]></ee:set-variable>
 				<ee:set-variable variableName="patient"><![CDATA[%dw 2.0
 output application/java
 ---
 using (patientRef = (payload.participant.actor.reference filter ($ startsWith "Patient"))[0])
 {
-	"participantId":  (patientRef splitBy "/")[-1] default ""
+	"participantId":  (patientRef splitBy ("/"))[-1] default ""
 }]]></ee:set-variable>
 				<ee:set-variable variableName="appointmentId"><![CDATA[%dw 2.0
 output application/java
@@ -1325,7 +1335,7 @@ attributes.uriParams.id]]></ee:set-variable>
 			target="ehrPatient">
 			<salesforce:salesforce-query>SELECT Id, HealthCloudGA__Account__c
 				FROM HealthCloudGA__EhrPatient__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'</salesforce:salesforce-query>
+				HealthCloudGA__SourceSystemId__c = ':id'</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
@@ -1346,12 +1356,11 @@ output application/java
 ]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<salesforce:create type="HealthCloudGA__EhrEncounter__c"
-			doc:name="Create EhrEncounter in SFHC" doc:id="8f988087-0aa8-4e42-8d31-4ebc90a8bac5"
-			config-ref="Salesforce_Config" />
+		<logger level="INFO" doc:name="Logger" doc:id="79a34270-1f6e-4c23-a761-88cdeffa76b0" message="#[output application/json --- payload]"/>
 		<salesforce:upsert doc:name="Upsert EhrEncounter in SFHC"
 			doc:id="c23974e8-b28d-484b-adf6-6a4e38d51202" config-ref="Salesforce_Config"
 			externalIdFieldName="Id" type="HealthCloudGA__EhrEncounter__c" />
+		<flow-ref doc:name="deleteObsoleteEncounterParticipantsSubFlow" doc:id="a6eb46c4-46b8-46c7-8d67-11c2f8a03267" name="deleteObsoleteEncounterParticipantsSubFlow"/>
 		<flow-ref doc:name="createEncounterParticipantSubFlow"
 			doc:id="9a087b3a-b293-4eb1-b85b-78602d04db60" name="createEncounterParticipantSubFlow" />
 		<ee:transform doc:name="Build response"
@@ -1368,11 +1377,6 @@ payload]]></ee:set-payload>
 		<ee:transform doc:name="save request attributes"
 			doc:id="af2f0fc2-7058-49c2-88e3-f1f38589c907">
 			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
 				<ee:set-variable variableName="requestAttributes"><![CDATA[%dw 2.0
@@ -1392,6 +1396,7 @@ attributes]]></ee:set-variable>
 	"id" : attributes.queryParams.identifier
 }]]]></salesforce:parameters>
 		</salesforce:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="134e269b-b3bc-434b-84d0-fbe5d81bbd63" message="#[output application/json --- payload]"/>
 		<ee:transform doc:name="Build Encounter bundle response"
 			doc:id="66a53eb1-7a0a-4999-bdc3-1525c9315046">
 			<ee:message>
@@ -1442,7 +1447,7 @@ output application/json
 			target="sfdcPractitionerId">
 			<salesforce:salesforce-query>SELECT Id FROM
 				HealthCloudGA__EhrPractitioner__c WHERE
-				HealthCloudGA__SourceSystemId__c = 'id'
+				HealthCloudGA__SourceSystemId__c = ':id'
 			</salesforce:salesforce-query>
 			<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
@@ -1457,11 +1462,12 @@ output application/json
 output application/java
 ---
 [{
-	HealthCloudGA__Encounter__c    : flowVars.sfdcEncounterId,
-	HealthCloudGA__Practitioner__c : flowVars.sfdcPractitionerId
+	HealthCloudGA__Encounter__c    : vars.sfdcEncounterId.Id,
+	HealthCloudGA__Practitioner__c : vars.sfdcPractitionerId.Id
 }]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3e4baf0b-cba9-45a9-872f-93ebe26b3159" message="#[output application/json --- payload]"/>
 		<salesforce:create doc:name="Create new EhrEncounterParticipant"
 			doc:id="a7988794-dc35-41a4-8280-92b7f45e8909" config-ref="Salesforce_Config"
 			type="HealthCloudGA__EhrEncounterParticipant__c" />
@@ -1471,6 +1477,7 @@ output application/java
 		<salesforce:query
 			doc:name="Get obsolete EhrEncounterParticipant IDs from SFHC "
 			doc:id="a1e17b21-cb0b-45fb-a96b-947c8fbc62af" config-ref="Salesforce_Config">
+			<ee:repeatable-file-store-iterable />
 			<salesforce:salesforce-query>SELECT Id FROM
 				HealthCloudGA__EhrEncounterParticipant__c WHERE
 				HealthCloudGA__Encounter__c = ':id'
@@ -1483,7 +1490,7 @@ output application/java
 		</salesforce:query>
 		<salesforce:delete doc:name="Delete obsolete EhrEncounterParticipants"
 			doc:id="6618533f-4166-4684-b9e9-21ab3bcd85b2" config-ref="Salesforce_Config">
-			<salesforce:delete-ids><![CDATA[#[if (sizeOf(payload) != 0) payload else []]]]></salesforce:delete-ids>
+			<salesforce:delete-ids><![CDATA[#[if (sizeOf(payload) > 0) payload.Id else []]]]></salesforce:delete-ids>
 		</salesforce:delete>
 	</sub-flow>
 </mule>
