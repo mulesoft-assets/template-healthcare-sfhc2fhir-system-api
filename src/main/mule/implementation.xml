@@ -196,14 +196,15 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
-	entry: if (payload != null) ([{
+	total: if (isEmpty(payload)) 0 else 1,
+	entry: if (isEmpty(payload)) [] 
+		else ([{
 			fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 			resource: {
 				resourceType: "Patient",
 				id: payload.Id
 			}
-	}]) else []
+	}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -398,9 +399,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
-	entry: 
-		if (payload != null) 
+	total: if (isEmpty(payload)) 0 else 1,
+	entry: if (isEmpty(payload)) [] 
+		   else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -408,7 +409,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -632,17 +632,17 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] 
+		else
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "AllergyIntolerance",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}]) 	
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -857,17 +857,17 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] 
+		else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "Observation",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1033,17 +1033,16 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "Device",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1192,9 +1191,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -1202,7 +1201,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1413,9 +1411,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -1423,7 +1421,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
