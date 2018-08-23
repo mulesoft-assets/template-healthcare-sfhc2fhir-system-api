@@ -196,14 +196,15 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
-	entry: if (payload != null) ([{
+	total: if (isEmpty(payload)) 0 else 1,
+	entry: if (isEmpty(payload)) [] 
+		else ([{
 			fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 			resource: {
 				resourceType: "Patient",
 				id: payload.Id
 			}
-	}]) else []
+	}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -398,9 +399,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
-	entry: 
-		if (payload != null) 
+	total: if (isEmpty(payload)) 0 else 1,
+	entry: if (isEmpty(payload)) [] 
+		   else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -408,7 +409,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -419,14 +419,16 @@ output application/json
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
+var substance= (payload.reaction map ($.substance.coding[0].display)) filter ($ != null)
+var manifestation= (payload.reaction map ($.manifestation[0].text)) filter ($ != null) 
 ---
 {
 		HealthCloudGA__SourceSystemId__c   : payload.identifier[0].value,
 		HealthCloudGA__RecorderName__c     : payload.recorder.display,
 		HealthCloudGA__CriticalityLabel__c : payload.criticality,
-		(HealthCloudGA__SubstanceLong__c    : if (payload.reaction is Array) ((payload.reaction map $.substance.coding[0].display) joinBy (","))  else payload.reaction) if (payload.reaction != null),	
-		(HealthCloudGA__Substance255__c     : if (payload.reaction is Array) ((payload.reaction map $.substance.coding[0].display) joinBy (","))  else payload.reaction) if (payload.reaction != null),
-		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation[0].text) joinBy (","))  else payload.reaction) if (payload.reaction != null),
+		(HealthCloudGA__SubstanceLong__c    : (substance joinBy (","))) if (substance != null and (substance != [])),	
+		(HealthCloudGA__Substance255__c     : (substance joinBy (","))) if (substance != null and (substance != [])),
+		(HealthCloudGA__Reaction__c       :(manifestation joinBy (","))) if (manifestation != null and (manifestation != [])),	
 		HealthCloudGA__RecordedDate__c     : payload.assertedDate as Date default null
 }]]></ee:set-payload>
 			</ee:message>
@@ -508,15 +510,17 @@ payload]]></ee:set-payload>
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
+var substance= (payload.reaction map ($.substance.coding[0].display)) filter ($ != null)
+var manifestation= (payload.reaction map ($.manifestation[0].text)) filter ($ != null) 
 ---
 {
 		Id                                 : attributes.uriParams.id,
 		HealthCloudGA__SourceSystemId__c   : payload.identifier[0].value,
 		HealthCloudGA__RecorderName__c     : payload.recorder.display,
 		HealthCloudGA__CriticalityLabel__c : payload.criticality,
-		HealthCloudGA__SubstanceLong__c    : payload.reaction[0].substance.coding[0].display,	
-		HealthCloudGA__Substance255__c     : payload.reaction[0].substance.coding[0].display,
-		(HealthCloudGA__Reaction__c        : if (payload.reaction is Array) ((payload.reaction map $.manifestation[0].text) joinBy (","))  else payload.reaction) if (payload.reaction != null),
+		(HealthCloudGA__SubstanceLong__c    : (substance joinBy (","))) if (substance != null and (substance != [])),	
+		(HealthCloudGA__Substance255__c     : (substance joinBy (","))) if (substance != null and (substance != [])),
+		(HealthCloudGA__Reaction__c       :(manifestation joinBy (","))) if (manifestation != null and (manifestation != [])),	
 		HealthCloudGA__RecordedDate__c     : payload.assertedDate as Date default null
 }
 
@@ -632,17 +636,17 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] 
+		else
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "AllergyIntolerance",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}]) 	
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -857,17 +861,17 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] 
+		else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "Observation",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1033,17 +1037,16 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
 					resourceType: "Device",
 					id: payload.Id
 				}
-			}]) 
-		else []
+			}])
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1192,9 +1195,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -1202,7 +1205,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -1413,9 +1415,9 @@ output application/json
 	meta: {
 		lastUpdated: now()
 	},
-	total: if (payload == null) 0 else 1,
+	total: if (isEmpty(payload)) 0 else 1,
 	entry: 
-		if (payload != null) 
+		if (isEmpty(payload)) [] else 
 			([{
 				fullUrl: "http://" ++  vars.requestAttributes.headers.host ++  vars.requestAttributes.requestPath ++ "/" ++ payload.Id,
 				resource: {
@@ -1423,7 +1425,6 @@ output application/json
 					id: payload.Id
 				}
 			}]) 
-		else []
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
