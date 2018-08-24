@@ -752,7 +752,7 @@ output application/java
 				<ee:set-variable variableName="deviceId"><![CDATA[%dw 2.0
 output application/java
 ---
-(payload.device.reference splitBy ("/"))[-1]]]></ee:set-variable>
+if (payload.device.reference != null )((payload.device.reference splitBy ("/"))[-1]) else null]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<salesforce:query-single doc:name="Get EhrPatient from SFHC "
