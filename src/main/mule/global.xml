@@ -16,7 +16,11 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 	<salesforce:sfdc-config name="Salesforce_Config"
 		doc:name="Salesforce Config" doc:id="b3201300-8e79-4422-8fcd-344ce363b485">
 		<salesforce:basic-connection username="${sfdc.username}"
-			password="${sfdc.password}" securityToken="${sfdc.securityToken}" />
+			password="${sfdc.password}" securityToken="${sfdc.securityToken}" >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</salesforce:basic-connection>
 	</salesforce:sfdc-config>
 
 	<http:listener-config
