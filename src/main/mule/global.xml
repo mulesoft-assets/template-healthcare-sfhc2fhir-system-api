@@ -34,13 +34,12 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 		httpStatusVarName="httpStatus" />
 
 	<configuration-properties doc:name="Configuration properties"
-		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="mule-artifact.properties" />
-	<configuration-properties doc:name="Configuration properties"
 		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="common.properties" />
 	<configuration-properties doc:name="Configuration properties"
 		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="mule.${mule.env}.properties" />
 		
-	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="def93ac8-d894-4d88-942f-d9c2cb66b9da" />	
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="def93ac8-d894-4d88-942f-d9c2cb66b9da" />
+	<global-property doc:name="Global Property" doc:id="674b6f18-5421-4da9-aa2c-76a96befe2a1" name="mule.env" value="dev" />	
 
 
 </mule>
