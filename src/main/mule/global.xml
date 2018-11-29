@@ -13,6 +13,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
 
+	<global-property doc:name="Global Property" doc:id="11aee4f0-0b80-44d4-9379-53fb6f0b77a6" name="mule.env" value="dev" />
 	<salesforce:sfdc-config name="Salesforce_Config"
 		doc:name="Salesforce Config" doc:id="b3201300-8e79-4422-8fcd-344ce363b485">
 		<salesforce:basic-connection username="${sfdc.username}"
@@ -34,13 +35,10 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 		httpStatusVarName="httpStatus" />
 
 	<configuration-properties doc:name="Configuration properties"
-		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="mule-artifact.properties" />
-	<configuration-properties doc:name="Configuration properties"
 		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="common.properties" />
 	<configuration-properties doc:name="Configuration properties"
 		doc:id="ffcc2fa6-c3ff-4b06-a8c9-8af3205b5254" file="mule.${mule.env}.properties" />
 		
-	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="def93ac8-d894-4d88-942f-d9c2cb66b9da" />	
-
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="def93ac8-d894-4d88-942f-d9c2cb66b9da" />
 
 </mule>

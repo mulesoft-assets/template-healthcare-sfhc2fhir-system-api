@@ -1,231 +1,2027 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd 
-	http://www.mulesoft.org/schema/mule/http 
-	http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
-	http://www.mulesoft.org/schema/mule/mule-apikit 
-	http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
-	<flow name="healthcare_sfhc2fhir_system_api-main">
-		<http:listener config-ref="healthcare_sfhc2fhir_system_api-httpListenerConfig"
-			path="/api/*">
-			<http:response statusCode="#[vars.httpStatus default 200]">
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
-			</http:response>
-			<http:error-response statusCode="#[vars.httpStatus default 500]">
-				<http:body>#[payload]</http:body>
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
-			</http:error-response>
-		</http:listener>
-		<apikit:router config-ref="healthcare_sfhc2fhir_system_api-config" />
-		<error-handler>
-			<on-error-propagate type="APIKIT:BAD_REQUEST">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/http   http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd   http://www.mulesoft.org/schema/mule/mule-apikit   http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+    <flow name="healthcare_sfhc2fhir_system_api-main">
+        <http:listener config-ref="healthcare_sfhc2fhir_system_api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="healthcare_sfhc2fhir_system_api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Bad request"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">400
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-			<on-error-propagate type="APIKIT:NOT_FOUND">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Resource not found"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-			<on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Method not allowed"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">405
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-			<on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Not acceptable"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">406
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-			<on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Unsupported media type"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">415
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-			<on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Not Implemented"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">501
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-		</error-handler>
-	</flow>
-	<flow name="healthcare_sfhc2fhir_system_api-console">
-		<http:listener config-ref="healthcare_sfhc2fhir_system_api-httpListenerConfig"
-			path="/console/*">
-			<http:response statusCode="#[vars.httpStatus default 200]">
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
-			</http:response>
-			<http:error-response statusCode="#[vars.httpStatus default 500]">
-				<http:body>#[payload]</http:body>
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
-			</http:error-response>
-		</http:listener>
-		<apikit:console config-ref="healthcare_sfhc2fhir_system_api-config" />
-		<error-handler>
-			<on-error-propagate type="APIKIT:NOT_FOUND">
-				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-					xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="healthcare_sfhc2fhir_system_api-console">
+        <http:listener config-ref="healthcare_sfhc2fhir_system_api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="healthcare_sfhc2fhir_system_api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Resource not found"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404
-						</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</on-error-propagate>
-		</error-handler>
-	</flow>
-	<flow name="put:\Appointment\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updateAppointment" doc:id="0f2e7afa-9523-4015-a9a3-9d66302c8dda"
-			name="updateAppointment" />
-	</flow>
-	<flow
-		name="put:\AllergyIntolerance\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updateAllergyIntolerance" doc:id="d4506e34-b7e1-4dcb-be3e-46038445e8e8"
-			name="updateAllergyIntolerance" />
-	</flow>
-	<flow name="put:\Condition\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updateCondition" doc:id="334d9ca9-a1ef-4b32-8dc8-0c11c99f4138"
-			name="updateCondition" />
-	</flow>
-	<flow name="put:\Device\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updateDevice" doc:id="9045a9cc-1aae-4ccf-97ea-d1e437ee6364"
-			name="updateDevice" />
-	</flow>
-	<flow name="put:\Practitioner\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updatePractitioner" doc:id="f5a72429-32b1-4aea-99ef-5b4edc5a7ec9"
-			name="updatePractitioner" />
-	</flow>
-	<flow name="put:\Patient\(id):healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="updatePatient" doc:id="65c8cb37-38d9-4952-b371-82ccfc51048b"
-			name="updatePatient" />
-	</flow>
-	<flow name="get:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getAllergyIntolerance" doc:id="87a4816f-bdd1-4add-8122-6a5a5d446a09"
-			name="getAllergyIntolerance" />
-	</flow>
-	<flow name="get:\Appointment:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getAppointment" doc:id="e0832ae6-4220-47fe-aff0-1b53d4ed469e"
-			name="getAppointment" />
-	</flow>
-	<flow name="get:\Condition:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getCondition" doc:id="0d68b319-0c98-49ec-9c77-19169a5a1b38"
-			name="getCondition" />
-	</flow>
-	<flow name="get:\Device:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getDevice" doc:id="44c4e881-7d31-4953-936a-45ea1cb53303"
-			name="getDevice" />
-	</flow>
-	<flow name="get:\Observation:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getObservation" doc:id="307e62a8-c1a6-4a15-8e1c-2bed866308cb"
-			name="getObservation" />
-	</flow>
-	<flow name="get:\Patient:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getPatient" doc:id="50909dad-3cf5-42b8-be62-bb3f0764e690"
-			name="getPatient" />
-	</flow>
-	<flow name="get:\Practitioner:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="getPractitioner" doc:id="a6f8b9a2-e802-4289-abcf-cbbc4ccebcf0"
-			name="getPractitioner" />
-	</flow>
-	<flow name="post:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createAllergyIntolerance" doc:id="309c25f7-40ee-48f7-88ce-e30d6cb82868"
-			name="createAllergyIntolerance" />
-	</flow>
-	<flow name="post:\Appointment:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createAppointment" doc:id="8c48bacd-4535-4aaf-a234-e7784f9cae4c"
-			name="createAppointment" />
-	</flow>
-	<flow name="post:\Condition:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createCondition" doc:id="073bc73b-1cbf-4347-85b0-8a90222ea2bd"
-			name="createCondition" />
-	</flow>
-	<flow name="post:\Device:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createDevice" doc:id="a65482c3-1225-481c-ba3a-e747010b3f3b"
-			name="createDevice" />
-	</flow>
-	<flow name="post:\Observation:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createObservation" doc:id="c94998b5-05b7-4df4-b53a-db64810875af"
-			name="createObservation" />
-	</flow>
-	<flow name="post:\Patient:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createPatient" doc:id="8fe839f9-ccbd-4551-9c6b-8b930f104d24"
-			name="createPatient" />
-	</flow>
-	<flow name="post:\Practitioner:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createPractitioner" doc:id="a1b59016-3a1a-4864-b366-0a6433aaa79e"
-			name="createPractitioner" />
-	</flow>
-	<flow name="post:\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
-		<flow-ref doc:name="createMedicationRequest" doc:id="afa93ac8-7795-4507-977b-0daf501e8313" 
-			name="createMedicationRequest" />
-	</flow>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\Appointment\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updateAppointment" doc:id="0f2e7afa-9523-4015-a9a3-9d66302c8dda" name="updateAppointment" />
+    </flow>
+    <flow name="put:\AllergyIntolerance\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updateAllergyIntolerance" doc:id="d4506e34-b7e1-4dcb-be3e-46038445e8e8" name="updateAllergyIntolerance" />
+    </flow>
+    <flow name="put:\Condition\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updateCondition" doc:id="334d9ca9-a1ef-4b32-8dc8-0c11c99f4138" name="updateCondition" />
+    </flow>
+    <flow name="put:\Device\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updateDevice" doc:id="9045a9cc-1aae-4ccf-97ea-d1e437ee6364" name="updateDevice" />
+    </flow>
+    <flow name="put:\Practitioner\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updatePractitioner" doc:id="f5a72429-32b1-4aea-99ef-5b4edc5a7ec9" name="updatePractitioner" />
+    </flow>
+    <flow name="put:\Patient\(id):healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="updatePatient" doc:id="65c8cb37-38d9-4952-b371-82ccfc51048b" name="updatePatient" />
+    </flow>
+    <flow name="get:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getAllergyIntolerance" doc:id="87a4816f-bdd1-4add-8122-6a5a5d446a09" name="getAllergyIntolerance" />
+    </flow>
+    <flow name="get:\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getAppointment" doc:id="e0832ae6-4220-47fe-aff0-1b53d4ed469e" name="getAppointment" />
+    </flow>
+    <flow name="get:\Condition:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getCondition" doc:id="0d68b319-0c98-49ec-9c77-19169a5a1b38" name="getCondition" />
+    </flow>
+    <flow name="get:\Device:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getDevice" doc:id="44c4e881-7d31-4953-936a-45ea1cb53303" name="getDevice" />
+    </flow>
+    <flow name="get:\Observation:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getObservation" doc:id="307e62a8-c1a6-4a15-8e1c-2bed866308cb" name="getObservation" />
+    </flow>
+    <flow name="get:\Patient:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getPatient" doc:id="50909dad-3cf5-42b8-be62-bb3f0764e690" name="getPatient" />
+    </flow>
+    <flow name="get:\Practitioner:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="getPractitioner" doc:id="a6f8b9a2-e802-4289-abcf-cbbc4ccebcf0" name="getPractitioner" />
+    </flow>
+    <flow name="post:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createAllergyIntolerance" doc:id="309c25f7-40ee-48f7-88ce-e30d6cb82868" name="createAllergyIntolerance" />
+    </flow>
+    <flow name="post:\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createAppointment" doc:id="8c48bacd-4535-4aaf-a234-e7784f9cae4c" name="createAppointment" />
+    </flow>
+    <flow name="post:\Condition:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createCondition" doc:id="073bc73b-1cbf-4347-85b0-8a90222ea2bd" name="createCondition" />
+    </flow>
+    <flow name="post:\Device:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createDevice" doc:id="a65482c3-1225-481c-ba3a-e747010b3f3b" name="createDevice" />
+    </flow>
+    <flow name="post:\Observation:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createObservation" doc:id="c94998b5-05b7-4df4-b53a-db64810875af" name="createObservation" />
+    </flow>
+    <flow name="post:\Patient:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createPatient" doc:id="8fe839f9-ccbd-4551-9c6b-8b930f104d24" name="createPatient" />
+    </flow>
+    <flow name="post:\Practitioner:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createPractitioner" doc:id="a1b59016-3a1a-4864-b366-0a6433aaa79e" name="createPractitioner" />
+    </flow>
+    <flow name="post:\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
+        <flow-ref doc:name="createMedicationRequest" doc:id="afa93ac8-7795-4507-977b-0daf501e8313" name="createMedicationRequest" />
+    </flow>
+    <flow name="put:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Appointment:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Condition:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Condition:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Device:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Device:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\MedicationRequest:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Observation:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Observation:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Patient:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Patient:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Practitioner:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="put:\Practitioner:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\Observation\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="put:\Observation\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="put:\MedicationRequest\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="put:\MedicationRequest\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Appointment:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Condition:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Condition:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Device:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Device:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\MedicationRequest:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Observation:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Observation:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Patient:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Patient:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Practitioner:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="delete:\Practitioner:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Practitioner\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Practitioner\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Patient\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Patient\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\AllergyIntolerance\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\AllergyIntolerance\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Device\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Device\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\MedicationRequest\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\MedicationRequest\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Observation\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Observation\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Appointment\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Appointment\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="delete:\Condition\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\Condition\(id):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Patient\(id)\AllergyIntolerance:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/AllergyIntolerance?patient=Patient%2F9"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:25:15.712Z"
+  },
+  total: 6,
+  entry: [
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/1",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: 1,
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Peanuts"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/2",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: "2",
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Aspirin"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/3",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: "3",
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Penicillin"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/4",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: "4",
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Gluten"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/5",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: "5",
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Dairy products"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/AllergyIntolerance/6",
+      resource: {
+        resourceType: "AllergyIntolerance",
+        id: "6",
+        patient: {
+          reference: "Patient/9"
+        },
+        verificationStatus: "confirmed",
+        reaction: [
+          {
+            manifestation: [
+              {
+                text: "symptoms"
+              }
+            ],
+            substance: {
+              coding: [
+                {
+                  display: "Morphine"
+                }
+              ]
+            }
+          }
+        ],
+        assertedDate: "2016-05-11"
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Practitioner\(id)\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/Appointment?patient=Patient%2F9"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:28:41.776Z"
+  },
+  total: 7,
+  entry: [
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/3",
+      resource: {
+        resourceType: "Appointment",
+        id: "3",
+        description: "Regular Check-up",
+        start: "2016-10-28T14:30:00-08:00",
+        end: "2016-10-28T15:00:00-08:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "needs-action",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "proposed",
+        slot: [
+          {
+            reference: "Slot/15"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/4",
+      resource: {
+        resourceType: "Appointment",
+        id: "4",
+        description: "",
+        start: "2016-10-28T15:00:00+00:00",
+        end: "2016-10-28T15:30:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/16"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/5",
+      resource: {
+        resourceType: "Appointment",
+        id: "5",
+        description: "",
+        start: "2016-10-28T14:00:00+00:00",
+        end: "2016-10-28T14:30:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/14"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/9",
+      resource: {
+        resourceType: "Appointment",
+        id: "9",
+        description: "",
+        start: "2016-09-12T16:30:00+00:00",
+        end: "2016-09-12T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/25"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/10",
+      resource: {
+        resourceType: "Appointment",
+        id: "10",
+        description: "",
+        start: "2016-09-16T16:30:00+00:00",
+        end: "2016-09-16T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/23"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/11",
+      resource: {
+        resourceType: "Appointment",
+        id: "11",
+        description: "",
+        start: "2016-09-14T16:30:00+00:00",
+        end: "2016-09-14T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/24"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/14",
+      resource: {
+        resourceType: "Appointment",
+        id: "14",
+        description: "",
+        start: "2016-09-15T15:30:00+00:00",
+        end: "2016-09-15T16:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/21"
+          }
+        ]
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Patient\(id)\Appointment:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/Appointment?patient=Patient%2F9"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:28:41.776Z"
+  },
+  total: 7,
+  entry: [
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/3",
+      resource: {
+        resourceType: "Appointment",
+        id: "3",
+        description: "Regular Check-up",
+        start: "2016-10-28T14:30:00-08:00",
+        end: "2016-10-28T15:00:00-08:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "needs-action",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "proposed",
+        slot: [
+          {
+            reference: "Slot/15"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/4",
+      resource: {
+        resourceType: "Appointment",
+        id: "4",
+        description: "",
+        start: "2016-10-28T15:00:00+00:00",
+        end: "2016-10-28T15:30:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/16"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/5",
+      resource: {
+        resourceType: "Appointment",
+        id: "5",
+        description: "",
+        start: "2016-10-28T14:00:00+00:00",
+        end: "2016-10-28T14:30:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Andreas Anderson"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/14"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/9",
+      resource: {
+        resourceType: "Appointment",
+        id: "9",
+        description: "",
+        start: "2016-09-12T16:30:00+00:00",
+        end: "2016-09-12T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/25"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/10",
+      resource: {
+        resourceType: "Appointment",
+        id: "10",
+        description: "",
+        start: "2016-09-16T16:30:00+00:00",
+        end: "2016-09-16T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/23"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/11",
+      resource: {
+        resourceType: "Appointment",
+        id: "11",
+        description: "",
+        start: "2016-09-14T16:30:00+00:00",
+        end: "2016-09-14T17:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/24"
+          }
+        ]
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Appointment/14",
+      resource: {
+        resourceType: "Appointment",
+        id: "14",
+        description: "",
+        start: "2016-09-15T15:30:00+00:00",
+        end: "2016-09-15T16:00:00+00:00",
+        participant: [
+          {
+            status: "accepted",
+            actor: {
+              reference: "Patient/9",
+              display: "Veera Radonctest"
+            }
+          }, 
+          {
+            status: "accepted",
+            actor: {
+              reference: "Practitioner/1",
+              display: "Jamie Fletcher, MD"
+            }
+          }
+        ],
+        status: "booked",
+        slot: [
+          {
+            reference: "Slot/21"
+          }
+        ]
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Patient\(id)\Condition:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/Condition?patient=Patient%2F9"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-21T13:46:17.878Z"
+  },
+  total: 5,
+  entry: [
+    {
+      fullUrl: "http://localhost:8081/api/Condition/1",
+      resource: {
+        resourceType: "Condition",
+        id: "1",
+        subject: {
+          reference: "Patient/9"
+        },
+        asserter: {
+          reference: "Patient/9",
+          display: ""
+        },
+        code: {
+          coding: [
+            {
+              code: "195967001",
+              display: "Asthma",
+              system: "http://snomed.info/sct"
+            }
+          ]
+        },
+        verificationStatus: "confirmed",
+        onsetDateTime: "2016-05-10"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Condition/2",
+      resource: {
+        resourceType: "Condition",
+        id: "2",
+        subject: {
+          reference: "Patient/9"
+        },
+        asserter: {
+          reference: "Patient/9",
+          display: ""
+        },
+        code: {
+          coding: [
+            {
+              code: "73211009",
+              display: "Diabetes mellitus",
+              system: "http://snomed.info/sct"
+            }
+          ]
+        },
+        verificationStatus: "confirmed",
+        onsetDateTime: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Condition/3",
+      resource: {
+        resourceType: "Condition",
+        id: "3",
+        subject: {
+          reference: "Patient/9"
+        },
+        asserter: {
+          reference: "Patient/9",
+          display: ""
+        },
+        code: {
+          coding: [
+            {
+              code: "38341003",
+              display: "High Blood Pressure",
+              system: "http://snomed.info/sct"
+            }
+          ]
+        },
+        verificationStatus: "refuted",
+        onsetDateTime: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Condition/4",
+      resource: {
+        resourceType: "Condition",
+        id: "4",
+        subject: {
+          reference: "Patient/9"
+        },
+        asserter: {
+          reference: "Patient/9",
+          display: ""
+        },
+        code: {
+          coding: [
+            {
+              code: "13644009",
+              display: "High Cholesterol",
+              system: "http://snomed.info/sct"
+            }
+          ]
+        },
+        verificationStatus: "unknown",
+        onsetDateTime: "2016-05-11"
+      }
+    }, 
+    {
+      fullUrl: "http://localhost:8081/api/Condition/5",
+      resource: {
+        resourceType: "Condition",
+        id: "5",
+        subject: {
+          reference: "Patient/9"
+        },
+        asserter: {
+          reference: "Patient/9",
+          display: ""
+        },
+        code: {
+          coding: [
+            {
+              code: "22298006",
+              display: "Heart Attack",
+              system: "http://snomed.info/sct"
+            }
+          ]
+        },
+        verificationStatus: "unknown",
+        onsetDateTime: "2016-05-11"
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Patient\(id)\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/MedicationOrder"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:39:31.578Z"
+  },
+  total: 1,
+  entry: [
+    {
+      resourceType: "MedicationOrder",
+      id: "5245",
+      status: "active",
+      subject: {
+        reference: "Patient/1164365"
+      },
+      intent: "proposal",
+      dosageInstruction: [
+        {
+          text: "Take 3 mg by mouth Daily."
+        }, 
+        {
+          doseQuantity: {
+            value: 3,
+            unit: "mg",
+            system: "http://unitsofmeasure.org",
+            code: "mg"
+          }
+        }
+      ],
+      medicationCodeableConcept: {
+        coding: [
+          {
+            system: "Internal",
+            code: "78064"
+          }, 
+          {
+            system: "RxNorm",
+            code: "679314"
+          }
+        ],
+        text: "PALIPERIDONE ER 3 MG TABLET,EXTENDED RELEASE 24 HR"
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\MedicationRequest:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/MedicationOrder"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:39:31.578Z"
+  },
+  total: 1,
+  entry: [
+    {
+      resourceType: "MedicationOrder",
+      id: "5245",
+      status: "active",
+      subject: {
+        reference: "Patient/1164365"
+      },
+      intent: "proposal",
+      dosageInstruction: [
+        {
+          text: "Take 3 mg by mouth Daily."
+        }, 
+        {
+          doseQuantity: {
+            value: 3,
+            unit: "mg",
+            system: "http://unitsofmeasure.org",
+            code: "mg"
+          }
+        }
+      ],
+      medicationCodeableConcept: {
+        coding: [
+          {
+            system: "Internal",
+            code: "78064"
+          }, 
+          {
+            system: "RxNorm",
+            code: "679314"
+          }
+        ],
+        text: "PALIPERIDONE ER 3 MG TABLET,EXTENDED RELEASE 24 HR"
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Patient\(id)\Observation:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/Observation"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-20T12:39:31.578Z"
+  },
+  total: 1,
+  entry: [
+    {
+      resourceType: "Observation",
+      id: "455454",
+      status: "registered",
+      category: [
+        {
+          coding: [
+            {
+              system: "http://hl7.org/fhir/observation-category",
+              code: "vital-signs",
+              display: "Vital Signs"
+            }
+          ]
+        }
+      ],
+      code: {
+        coding: [
+          {
+            system: "http://loinc.org",
+            code: "3141-9",
+            display: "Weight Measured"
+          }, 
+          {
+            system: "http://snomed.info/sct",
+            code: "27113001",
+            display: "Body weight"
+          }, 
+          {
+            system: "http://acme.org/devices/clinical-codes",
+            code: "body-weight",
+            display: "Body Weight"
+          }
+        ]
+      },
+      subject: {
+        reference: "Patient/5646546"
+      },
+      valueQuantity: {
+        value: 185,
+        unit: "lbs",
+        system: "http://unitsofmeasure.org",
+        code: "[lb_av]"
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Practitioner\(id)\Schedule:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Bundle",
+  "type": "searchset",
+  link: [
+    {
+      relation: "self",
+      url: "http://localhost:8081/api/Schedule?actor=Practitioner%2F1"
+    }
+  ],
+  meta: {
+    lastUpdated: "2016-09-21T14:03:07.515Z"
+  },
+  total: 1,
+  entry: [
+    {
+      fullUrl: "http://localhost:8081/api/Schedule/1",
+      resource: {
+        resourceType: "Schedule",
+        id: "1",
+        actor: {
+          display: "Jamie Fletcher, MD",
+          reference: "Practitioner/1"
+        }
+      }
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Condition\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Condition\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Practitioner\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Practitioner\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Appointment\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Appointment\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\AllergyIntolerance\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\AllergyIntolerance\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\MedicationRequest\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\MedicationRequest\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Condition\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Condition\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\AllergyIntolerance\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\AllergyIntolerance\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Observation\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Observation\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\MedicationRequest\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\MedicationRequest\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Observation\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Observation\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Device\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Device\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Practitioner\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Practitioner\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Appointment\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Appointment\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Patient\_history:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Patient\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Patient\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Patient\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Device\(id)\_history:healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Device\(id)\_history:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Condition\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Condition\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\AllergyIntolerance\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\AllergyIntolerance\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Appointment\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Appointment\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\MedicationRequest\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\MedicationRequest\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Device\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Device\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Patient\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Patient\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Observation\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Observation\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Practitioner\_search:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="get:\Practitioner\_search:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Device\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Device",
+  id: "1",
+  identifier: [
+    {
+      system: "http://goodcare.org/devices/id",
+      value: "345675"
+    }, 
+    {
+      "type": {
+        coding: [
+          {
+            system: "http://hl7.org/fhir/identifier-type",
+            code: "SNO"
+          }
+        ],
+        text: "Serial Number"
+      },
+      value: "AMID-342135-8464"
+    }
+  ],
+  "type": {
+    coding: [
+      {
+        system: "http://snomed.info/sct",
+        code: "86184003",
+        display: "Electrocardiographic monitor and recorder"
+      }
+    ],
+    text: "ECG"
+  },
+  note: [
+    {
+      authorReference: {
+        reference: "Practitioner/xcda-author"
+      },
+      time: "2015-06-28T14:03:32+10:00",
+      text: "QA Checked"
+    }
+  ],
+  status: "inactive",
+  manufacturer: "Acme Devices, Inc",
+  model: "AB 45-J",
+  lotNumber: "43453424",
+  contact: [
+    {
+      system: "phone",
+      value: "ext 4352"
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Practitioner\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Practitioner",
+  id: "1",
+  address: [
+    {
+      city: "San Francisco",
+      country: "United States of America",
+      line: [
+        "Main Street 19"
+      ],
+      postalCode: "09554"
+    }
+  ],
+  birthDate: "1969-07-25",
+  gender: "male",
+  name: [
+    {
+      use: "official",
+      family: [
+        "Fletcher"
+      ],
+      given: [
+        "Jamie"
+      ],
+      suffix: [
+        "MD"
+      ]
+    }
+  ],
+  telecom: [
+    {
+      system: "phone",
+      use: "work",
+      value: "987-777-025"
+    }, 
+    {
+      system: "fax",
+      use: "work",
+      value: "746-9935"
+    }, 
+    {
+      system: "email",
+      use: "work",
+      value: "fletcher.jamie@doctor.org"
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\MedicationRequest\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "MedicationOrder",
+  id: "5245",
+  status: "active",
+  subject: {
+    reference: "Patient/1164365"
+  },
+  intent: "proposal",
+  dosageInstruction: [
+    {
+      text: "Take 3 mg by mouth Daily."
+    }, 
+    {
+      doseQuantity: {
+        value: 3,
+        unit: "mg",
+        system: "http://unitsofmeasure.org",
+        code: "mg"
+      }
+    }
+  ],
+  medicationCodeableConcept: {
+    coding: [
+      {
+        system: "Internal",
+        code: "78064"
+      }, 
+      {
+        system: "RxNorm",
+        code: "679314"
+      }
+    ],
+    text: "PALIPERIDONE ER 3 MG TABLET,EXTENDED RELEASE 24 HR"
+  }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Observation\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Observation",
+  id: "455454",
+  status: "registered",
+  category: [
+    {
+      coding: [
+        {
+          system: "http://hl7.org/fhir/observation-category",
+          code: "vital-signs",
+          display: "Vital Signs"
+        }
+      ]
+    }
+  ],
+  code: {
+    coding: [
+      {
+        system: "http://loinc.org",
+        code: "3141-9",
+        display: "Weight Measured"
+      }, 
+      {
+        system: "http://snomed.info/sct",
+        code: "27113001",
+        display: "Body weight"
+      }, 
+      {
+        system: "http://acme.org/devices/clinical-codes",
+        code: "body-weight",
+        display: "Body Weight"
+      }
+    ]
+  },
+  subject: {
+    reference: "Patient/5646546"
+  },
+  valueQuantity: {
+    value: 185,
+    unit: "lbs",
+    system: "http://unitsofmeasure.org",
+    code: "[lb_av]"
+  }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Condition\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Condition",
+  id: "1",
+  subject: {
+    reference: "Patient/9"
+  },
+  asserter: {
+    reference: "Patient/9",
+    display: ""
+  },
+  code: {
+    coding: [
+      {
+        code: "195967001",
+        display: "Asthma",
+        system: "http://snomed.info/sct"
+      }
+    ]
+  },
+  verificationStatus: "confirmed",
+  onsetDateTime: "2016-05-10"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Patient\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Patient",
+  id: "9",
+  address: [
+    {
+      city: "San Francisco",
+      country: "United States of America",
+      line: [
+        "499 Folsom Street"
+      ],
+      postalCode: "90354",
+      state: "California"
+    }
+  ],
+  birthDate: "1970-02-12",
+  generalPractitioner: [
+    {
+      reference: "Practitioner/1"
+    }
+  ],
+  gender: "male",
+  name: [
+    {
+      use: "official",
+      family: [
+        "Radonctest"
+      ],
+      given: [
+        "Veera"
+      ]
+    }
+  ],
+  telecom: [
+    {
+      system: "phone",
+      use: "home",
+      value: "608-999-9005"
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\Appointment\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "Appointment",
+  id: "3",
+  description: "",
+  start: "2016-10-28T14:30:00+00:00",
+  end: "2016-10-28T15:00:00+00:00",
+  participant: [
+    {
+      status: "accepted",
+      actor: {
+        reference: "Patient/9",
+        display: "Andreas Anderson"
+      }
+    }, 
+    {
+      status: "accepted",
+      actor: {
+        reference: "Practitioner/1",
+        display: "Jamie Fletcher, MD"
+      }
+    }
+  ],
+  status: "booked",
+  slot: [
+    {
+      reference: "Slot/15"
+    }
+  ]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\AllergyIntolerance\(id):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  resourceType: "AllergyIntolerance",
+  id: "1",
+  patient: {
+    reference: "Patient/9"
+  },
+  verificationStatus: "confirmed",
+  reaction: [
+    {
+      manifestation: [
+        {
+          text: "symptoms"
+        }
+      ],
+      substance: {
+        coding: [
+          {
+            display: "Peanuts"
+          }
+        ]
+      }
+    }
+  ],
+  assertedDate: "2016-05-11"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\AllergyIntolerance\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\AllergyIntolerance\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Patient\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Patient\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Condition\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Condition\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Device\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Device\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Appointment\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Appointment\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Observation\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Observation\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\Practitioner\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\Practitioner\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="get:\MedicationRequest\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="vid">attributes.uriParams.vid</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\MedicationRequest\(id)\_history\(vid):healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Device\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Device\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Observation\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Observation\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Condition\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Condition\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\MedicationRequest\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\MedicationRequest\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\AllergyIntolerance\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\AllergyIntolerance\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Appointment\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Appointment\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Practitioner\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Practitioner\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
+    <flow name="post:\Patient\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config">
+        <logger level="INFO" message="post:\Patient\_search:application\x-www-form-urlencoded:healthcare_sfhc2fhir_system_api-config" />
+    </flow>
 </mule>
